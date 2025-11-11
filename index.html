@@ -5,23 +5,39 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>St Alphonsus Primary School</title>
         <link rel="stylesheet" href="styles.css">
-        <link rel="stylesheet" href=""
+        <link rel="stylesheet" href="bootstrap-5.3.8-dist/css/bootstrap.css">
     </head>
     <body>
         <header>
-            <h1>Welcome to St Alphonsus Primary School</h1>
-            <nav>
-                <ul>
-                    <li><a href="#about">About Us</a></li>
-                    <li><a href="#admissions">Admissions</a></li>
-                    <li><a href="#curriculum">Curriculum</a></li>
-                    <li><a href="#contact">Contact</a></li>
-                </ul>
+            <nav class="navbar navbar-expand-lg bg-body-tertiary">
+                <div class="container-fluid">
+                    <a class="navbar-brand" href="index.html">St. Alphonsus Primary School</a>
+                    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavAltMarkup" aria-controls="navbarNavAltMarkup" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                    </button>
+                    <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+                    <div class="navbar-nav">
+                        <a class="nav-link" href="students.html">Students</a>
+                        <a class="nav-link" href="teachers.html">Teachers</a>
+                        <a class="nav-link" href="parents.html">Parents</a>
+                        <a class="nav-link" href="class.html">Class</a>
+                    </div>
+                    </div>
+                </div>
             </nav>
         </header>
-        <section id="welcome">
-            <h2>Welcome message from our founder</h2>
-            <p>At St Alphonsus Primary School, we are dedicated to nurturing young minds and fostering a love for learning. Our mission is to provide a safe, inclusive, and stimulating environment where every child can thrive academically, socially, and emotionally. We believe in the holistic development of our students and strive to instill values of respect, kindness, and responsibility. Join us on this exciting journey of education and growth!</p>
+        <section class="container-fluid row" id="welcome">
+            <div class="col-6 welcome-text d-flex flex-column justify-content-center">
+                <h2>Welcome to St. Alphonsus</h2>
+                <p>At St Alphonsus Primary School, we are dedicated to nurturing young minds and fostering a love for learning. Our mission is to provide a safe, inclusive, and stimulating environment where every child can thrive academically, socially, and emotionally. We believe in the holistic development of our students and strive to instill values of respect, kindness, and responsibility. Join us on this exciting journey of education and growth!<br><br>- Tina Birds<br>Headteacher</p>
+            </div>
+            <div class="col-6">
+                <img src="img/welcome-image.jpg" alt="Welcome Image" class="img-fluid">
+            </div>
         </section>
+        <footer>
+            <p>&copy; 2024 St Alphonsus Primary School. All rights reserved.</p>
+        </footer>
+        <script src="bootstrap-5.3.8-dist/js/bootstrap.bundle.min.js"></script>
     </body>
 </html>
