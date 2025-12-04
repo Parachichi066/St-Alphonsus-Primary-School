@@ -4,3 +4,17 @@ footer{
     background-color: #f8f9fa;
     margin-top: 20px;
 }
+
+.form {
+    align-items: center;
+    max-width: 500px;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    background-color: #ffffff;
+}
+
+.invalid{
+    color: red;
+}
