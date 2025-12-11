@@ -1,8 +1,7 @@
 <?php
 
 include 'connection.php';
-session_start();
-if (!isset($_SESSION['id']) || $_SESSION['role'] != 'teacher') {
+if ($_SESSION['role'] != 'teacher') {
     header("Location: login.php");
     exit();
 }
@@ -11,30 +10,7 @@ $sql = "SELECT * FROM teachers WHERE user_id='{$_SESSION['id']}'";
 $result = $conn->query($sql)->fetch_assoc();
 $teacher = $result['teacher_name'];
 $class = $result['class_id'];
-$class_name = "";
-switch ($class) {
-    case 1:
-        $class_name = "Reception Year";
-        break;
-    case 2:
-        $class_name = "Year One";
-        break;
-    case 3:
-        $class_name = "Year Two";
-        break;
-    case 4:
-        $class_name = "Year Three";
-        break;
-    case 5:
-        $class_name = "Year Four";
-        break;
-    case 6:
-        $class_name = "Year Five";
-        break;
-    case 7:
-        $class_name = "Year Six";
-        break;
-}
+$class_name = class_name($class);
 
 ?>
 <!DOCTYPE html>
@@ -67,11 +43,11 @@ switch ($class) {
             <p>Manage your classes and students here.</p>
             <?php
 
-            $sql = "SELECT s.student_id, s.student_name, s.age, s.medical_information
-                FROM students s
-                INNER JOIN classes c ON s.class_id = c.class_id
-                INNER JOIN teachers t ON c.teacher_id = t.teacher_id
-                WHERE t.user_id = {$_SESSION['id']}";            
+            $sql = "SELECT student_id, student_name, age, medical_information
+                FROM students
+                INNER JOIN classes ON student.class_id = class.class_id
+                INNER JOIN teachers ON class.teacher_id = teachers.teacher_id
+                WHERE teachers.user_id = {$_SESSION['id']}";            
             $result = $conn->query($sql);
             if ($result->num_rows > 0) {
                 echo "<table class='table table-striped'>";
@@ -82,13 +58,17 @@ switch ($class) {
                     echo "<td>" . htmlspecialchars($row['student_name']) . "</td>";
                     echo "<td>" . htmlspecialchars($row['age']) . "</td>";
                     echo "<td>" . htmlspecialchars($row['medical_information']) . "</td>";
-                    echo "<td><a href='student.php?id=" . urlencode($row['student_id']) . "' class='btn btn-primary'>Edit</a>  <a href='delete_student.php?id=" . urlencode($row['student_id']) . "' class='delete btn btn-primary'>Delete</a></td>";
+                    echo "<td><a href='edit_student.php?id=" . urlencode($row['student_id']) . "' class='btn btn-primary'>Edit</a>  <a href='delete_student.php?id=" . urlencode($row['student_id']) . "' class='btn btn-danger'>Delete</a></td>";
 
                     echo "</tr>";
                 }
                 echo "</tbody></table>";
             } else {
                 echo "<p>No students in your class.</p>";
+            }
+            if (isset($_SESSION['action']) && $_SESSION['action'] === TRUE) {
+                echo "<p class='success'>Student details updated successfully.</p>";
+                $_SESSION['action'] = null;
             }
 
             ?>

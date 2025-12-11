@@ -48,17 +48,7 @@
                 $_SESSION['role'] = $user['role'];
 
                 if ($result->num_rows > 0) {
-                    switch ($_SESSION['role']) {
-                        case 'admin':
-                            header("Location: admin.php");
-                            break;
-                        case 'teacher':
-                            header("Location: teacher.php");
-                            break;
-                        case 'parent':
-                            header("Location: parent.php");
-                            break;
-                    };
+                    redirect();
                 } else {
                     echo "<p class='invalid'>Invalid username or password. Please try again.</p>";
                 }

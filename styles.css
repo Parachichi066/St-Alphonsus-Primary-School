@@ -19,7 +19,6 @@ footer{
     color: red;
 }
 
-.delete{
-    background-color: red !important;
-
+.success{
+    color: green;
 }
