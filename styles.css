@@ -18,3 +18,8 @@ footer{
 .invalid{
     color: red;
 }
+
+.delete{
+    background-color: red !important;
+
+}

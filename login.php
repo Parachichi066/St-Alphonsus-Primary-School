@@ -4,8 +4,8 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Log in</title>
-        <link rel="stylesheet" href="styles.css">
         <link rel="stylesheet" href="bootstrap-5.3.8-dist/css/bootstrap.css">
+        <link rel="stylesheet" href="styles.css">
     </head>
     <body>
         <header>
@@ -33,6 +33,7 @@
                 <input type="submit" value="Submit">
             </form>
             <?php
+            session_start();
 
             include 'connection.php';
 
@@ -40,18 +41,24 @@
                 $username = $_POST['username'];
                 $password = $_POST['password'];
 
-                $sql = "SELECT * FROM users WHERE username='$username' AND password='$password'";
+                $sql = "SELECT * FROM users WHERE BINARY username='$username' AND BINARY password='$password'";
                 $result = $conn->query($sql);
+                $user = $result->fetch_assoc();
+                $_SESSION['id'] = $user['user_id'];
+                $_SESSION['role'] = $user['role'];
 
                 if ($result->num_rows > 0) {
-                    $role = $result->fetch_assoc()['role'];
-                    if ($role == 'admin') {
-                        header("Location: admin.php");
-                    } elseif ($role == 'teacher') {
-                        header("Location: teacher.php");
-                    } else {
-                        header("Location: parent.php");
-                    }
+                    switch ($_SESSION['role']) {
+                        case 'admin':
+                            header("Location: admin.php");
+                            break;
+                        case 'teacher':
+                            header("Location: teacher.php");
+                            break;
+                        case 'parent':
+                            header("Location: parent.php");
+                            break;
+                    };
                 } else {
                     echo "<p class='invalid'>Invalid username or password. Please try again.</p>";
                 }
