@@ -101,7 +101,7 @@ $result = $conn->query($sql)->fetch_assoc();
                 $sql = "UPDATE students SET student_name='$student_name', age='$age', class_id='$class_id' student_address='$student_address', medical_information='$medical_information' WHERE student_id='$id'";
 
                 if ($conn->query($sql) === TRUE) {
-                    $_SESSION['action'] = TRUE;
+                    $_SESSION['action'] = 'edit';
                     redirect();
                 } else {
                     echo "<p class='error'>Error updating student details: " . $conn->error . "</p>";

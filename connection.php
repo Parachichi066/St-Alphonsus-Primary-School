@@ -11,10 +11,12 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-session_start();
-if (!isset($_SESSION['id'])) {
-    header("Location: login.php");
-    exit();
+if(basename($_SERVER['SCRIPT_NAME']) !== 'login.php') {
+    session_start();
+    if (!isset($_SESSION['id'])) {
+        header("Location: login.php");
+        exit();
+    }
 }
 
 function redirect() {

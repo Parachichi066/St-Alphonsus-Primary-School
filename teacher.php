@@ -45,8 +45,8 @@ $class_name = class_name($class);
 
             $sql = "SELECT student_id, student_name, age, medical_information
                 FROM students
-                INNER JOIN classes ON student.class_id = class.class_id
-                INNER JOIN teachers ON class.teacher_id = teachers.teacher_id
+                INNER JOIN classes ON students.class_id = classes.class_id
+                INNER JOIN teachers ON classes.teacher_id = teachers.teacher_id
                 WHERE teachers.user_id = {$_SESSION['id']}";            
             $result = $conn->query($sql);
             if ($result->num_rows > 0) {
@@ -59,15 +59,19 @@ $class_name = class_name($class);
                     echo "<td>" . htmlspecialchars($row['age']) . "</td>";
                     echo "<td>" . htmlspecialchars($row['medical_information']) . "</td>";
                     echo "<td><a href='edit_student.php?id=" . urlencode($row['student_id']) . "' class='btn btn-primary'>Edit</a>  <a href='delete_student.php?id=" . urlencode($row['student_id']) . "' class='btn btn-danger'>Delete</a></td>";
-
                     echo "</tr>";
                 }
                 echo "</tbody></table>";
             } else {
                 echo "<p>No students in your class.</p>";
             }
-            if (isset($_SESSION['action']) && $_SESSION['action'] === TRUE) {
-                echo "<p class='success'>Student details updated successfully.</p>";
+            if (isset($_SESSION['action'])) {
+                if($_SESSION['action'] == 'edit') {
+                    echo "<p class='success'>Student details updated successfully.</p>";
+                }
+                if ($_SESSION['action'] == 'delete') {
+                    echo "<p class='success'>Student deleted successfully.</p>";
+                }
                 $_SESSION['action'] = null;
             }
 
