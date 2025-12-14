@@ -46,7 +46,7 @@ if ($_SESSION['role'] != 'admin') {
             <?php
 
             if(isset($_GET['students'])) {
-                
+
                 $sql = "SELECT * FROM students";
                 
                 $result = $conn->query($sql);
@@ -122,7 +122,7 @@ if ($_SESSION['role'] != 'admin') {
             if(isset($_GET['classes'])) {
                 $sql = "SELECT classes.class_id, class_capacity, teacher_name
                         FROM classes
-                        LEFT JOIN teachers ON classes.teacher_id = teachers.teacher_id";
+                        LEFT JOIN teachers ON classes.class_id = teachers.class_id";
                 
                 $result = $conn->query($sql);
                 if ($result->num_rows > 0) {

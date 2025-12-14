@@ -3,8 +3,8 @@
 include 'connection.php';
 $id = $_GET['id'];
 
-$sql_student = "DELETE FROM students WHERE student_id='$id'";
-if ($conn->query($sql_student) === TRUE) {
+$sql_class = "DELETE FROM classes WHERE class_id='$id'";
+if ($conn->query($sql_class) === TRUE) {
     $_SESSION['action'] = 'delete';
     redirect();
 } else {
