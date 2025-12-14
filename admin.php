@@ -61,7 +61,7 @@ if ($_SESSION['role'] != 'admin') {
                         echo "<td>" . class_name(htmlspecialchars($row['class_id'])) . "</td>";
                         echo "<td>" . htmlspecialchars($row['student_address']) . "</td>";
                         echo "<td>" . htmlspecialchars($row['medical_information']) . "</td>";
-                        echo "<td><a href='edit_student.php?id=" . urlencode($row['student_id']) . "' class='btn btn-primary'>Edit</a>  <a href='delete_student.php?id=" . urlencode($row['student_id']) . "' class='btn btn-danger'>Delete</a></td>";
+                        echo "<td><a href='edit_student.php?id=" . urlencode($row['student_id']) . "' class='btn btn-primary'>Edit</a>  <a href='delete_student.php?id=" . urlencode($row['student_id']) . "' class='btn btn-danger' onclick=\"return confirm('Are you sure you want to delete " . htmlspecialchars($row['student_name']) . "? This cannot be undone.');\">Delete</a></td>";
                         echo "</tr>";
                     }
                     echo "</tbody></table>";
@@ -84,7 +84,7 @@ if ($_SESSION['role'] != 'admin') {
                         echo "<td>" . htmlspecialchars($row['parent_email']) . "</td>";
                         echo "<td>" . htmlspecialchars($row['parent_telephone']) . "</td>";
                         echo "<td>" . htmlspecialchars($row['parent_address']) . "</td>";
-                        echo "<td><a href='edit_parent.php?id=" . urlencode($row['parent_id']) . "' class='btn btn-primary'>Edit</a>  <a href='delete_parent.php?id=" . urlencode($row['parent_id']) . "' class='btn btn-danger'>Delete</a></td>";
+                        echo "<td><a href='edit_parent.php?id=" . urlencode($row['parent_id']) . "' class='btn btn-primary'>Edit</a>  <a href='delete_parent.php?id=" . urlencode($row['parent_id']) . "' class='btn btn-danger' onclick=\"return confirm('Are you sure you want to delete " . htmlspecialchars($row['parent_name']) . "? This cannot be undone.');\">Delete</a></td>";
                         echo "</tr>";
                     }
                     echo "</tbody></table>";
@@ -110,7 +110,7 @@ if ($_SESSION['role'] != 'admin') {
                         echo "<td>" . htmlspecialchars($row['teacher_salary']) . "</td>";
                         echo "<td>" . bg_check_status(htmlspecialchars($row['background_check'])) . "</td>";
                         echo "<td>" . class_name(htmlspecialchars($row['class_id'])) . "</td>";
-                        echo "<td><a href='edit_teacher.php?id=" . urlencode($row['teacher_id']) . "' class='btn btn-primary'>Edit</a>  <a href='delete_teacher.php?id=" . urlencode($row['teacher_id']) . "' class='btn btn-danger'>Delete</a></td>";
+                        echo "<td><a href='edit_teacher.php?id=" . urlencode($row['teacher_id']) . "' class='btn btn-primary'>Edit</a>  <a href='delete_teacher.php?id=" . urlencode($row['teacher_id']) . "' class='btn btn-danger' onclick=\"return confirm('Are you sure you want to delete " . htmlspecialchars($row['teacher_name']) . "? This cannot be undone.');\">Delete</a></td>";
                         echo "</tr>";
                     }
                     echo "</tbody></table>";
@@ -134,7 +134,7 @@ if ($_SESSION['role'] != 'admin') {
                         echo "<td>" . class_name(htmlspecialchars($row['class_id'])) . "</td>";
                         echo "<td>" . htmlspecialchars($row['class_capacity']) . "</td>";
                         echo "<td>" . htmlspecialchars($row['teacher_name'] ?? 'Unassigned') . "</td>";
-                        echo "<td><a href='edit_class.php?id=" . urlencode($row['class_id']) . "' class='btn btn-primary'>Edit</a>  <a href='delete_class.php?id=" . urlencode($row['class_id']) . "' class='btn btn-danger'>Delete</a></td>";
+                        echo "<td><a href='edit_class.php?id=" . urlencode($row['class_id']) . "' class='btn btn-primary'>Edit</a>  <a href='delete_class.php?id=" . urlencode($row['class_id']) . "' class='btn btn-danger' onclick=\"return confirm('Are you sure you want to delete " . class_name(htmlspecialchars($row['class_id'])) . "? This cannot be undone.');\">Delete</a></td>";
                         echo "</tr>";
                     }
                     echo "</tbody></table>";
