@@ -51,4 +51,8 @@ function class_name($class_id) {
             return "Year Six";
     }
 }
+
+function bg_check_status($status) {
+    return $status ? "Cleared" : "Pending";
+}
 ?>
