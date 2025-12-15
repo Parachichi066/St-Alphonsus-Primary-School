@@ -7,29 +7,30 @@ if(isset($_POST['cancel'])) {
 }
 
 if (isset($_POST['add'])) {
-    $student_name = $_POST['student_name'];
-    $age = $_POST['age'];
-    $medical_information = $_POST['medical_information'];
+    $teacher_name = $_POST['teacher_name'];
+    $teacher_email = $_POST['teacher_email'];
+    $teacher_telephone = $_POST['teacher_telephone'];
+    $teacher_address = $_POST['teacher_address'];
+    $teacher_salary = $_POST['teacher_salary'];
+    $background_check = $_POST['background_check'];
     $class_id = $_POST['class_id'];
-    $student_address = $_POST['student_address'];
-    
-    $sql = "INSERT INTO students (student_name, age, medical_information, class_id, student_address) VALUES ('$student_name', '$age', '$medical_information', '$class_id', '$student_address')";
+
+    $sql = "INSERT INTO teachers (teacher_name, teacher_email, teacher_telephone, teacher_address, teacher_salary, background_check, class_id) VALUES ('$teacher_name', '$teacher_email', '$teacher_telephone', '$teacher_address', '$teacher_salary', '$background_check', '$class_id')";
 
     if ($conn->query($sql) === TRUE) {
         $_SESSION['action'] = 'add';
         redirect();
     } else {
-        echo "<p class='error'>Error adding student details: " . $conn->error . "</p>";
+        echo "<p class='error'>Error adding Teacher details: " . $conn->error . "</p>";
     }
 }
-
 ?>
 <!DOCTYPE html>
 <html lang="en">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Add Student</title>
+        <title>Add Teacher</title>
         <link rel="stylesheet" href="bootstrap-5.3.8-dist/css/bootstrap.css">
         <link rel="stylesheet" href="styles.css">
     </head>
@@ -50,16 +51,35 @@ if (isset($_POST['add'])) {
             </nav>
         </header>
         <main class="container mt-4">
-            <h1>Add Student</h1>
+            <h1>Add Teacher</h1>
             <form action="#" method="POST">
                 <div class="mb-3">
-                    <label for="student_name" class="form-label">Student Name</label>
-                    <input type="text" class="form-control" id="student_name" name="student_name" required>
+                    <label for="teacher_name" class="form-label">Teacher Name</label>
+                    <input type="text" class="form-control" id="teacher_name" name="teacher_name" required>
                 </div>
                 <div class="mb-3">
-                    <label for="age" class="form-label">Age</label>
-                    <input type="number" class="form-control" id="age" name="age" required>
-                </div>                
+                    <label for="teacher_email" class="form-label">Teacher Email</label>
+                    <input type="email" class="form-control" id="teacher_email" name="teacher_email" required>
+                </div>
+                <div class="mb-3">
+                    <label for="teacher_telephone" class="form-label">Teacher Telephone</label>
+                    <input type="tel" class="form-control" id="teacher_telephone" name="teacher_telephone" required>
+                </div>
+                <div class="mb-3">
+                    <label for="teacher_address" class="form-label">Teacher Address</label>
+                    <input type="text" class="form-control" id="teacher_address" name="teacher_address" required>
+                </div>
+                <div class="mb-3">
+                    <label for="teacher_salary" class="form-label">Teacher Salary</label>
+                    <input type="float" class="form-control" id="teacher_salary" name="teacher_salary" required>
+                </div>
+                <div class="mb-3">
+                    <label for="background_check" class="form-label">Background Check Status</label>
+                    <select class="form-select" id="background_check" name="background_check" required>
+                        <option value="0">Pending</option>
+                        <option value="1">Cleared</option>
+                    </select>
+                </div>
                 <div class="mb-3">
                     <label for="class_id" class="form-label">Assigned Year</label>
                     <select class="form-select" id="class_id" name="class_id" required>
@@ -75,15 +95,7 @@ if (isset($_POST['add'])) {
 
                         ?>
                     </select>
-                </div>
-                <div class="mb-3">
-                    <label for="student_address" class="form-label">Student Address</label>
-                    <input type="text" class="form-control" id="student_address" name="student_address" required>
-                </div>
-                <div class="mb-3">
-                    <label for="medical_information" class="form-label">Medical Information</label>
-                    <input type="text" class="form-control" id="medical_information" name="medical_information" required>
-                </div>
+                </div>                
                 <button type="submit" class="btn btn-primary" name="add">Add</button>
                 <button type="submit" class="btn btn-danger" name="cancel">Cancel</button>
             </form>

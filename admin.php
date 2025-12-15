@@ -52,6 +52,9 @@ if ($_SESSION['role'] != 'admin') {
                 if ($_SESSION['action'] == 'delete') {
                     echo "<p class='success'>Details deleted successfully.</p>";
                 }
+                if ($_SESSION['action'] == 'add') {
+                    echo "<p class='success'>Details added successfully.</p>";
+                }
                 $_SESSION['action'] = null;
             }
 
