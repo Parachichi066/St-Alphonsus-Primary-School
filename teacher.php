@@ -42,6 +42,16 @@ $class_name = class_name($class);
             <h2>Welcome, <?php echo $teacher; ?> of <?php echo $class_name ?></h2>
             <p>Manage your classes and students here.</p>
             <?php
+            
+            if (isset($_SESSION['action'])) {
+                if($_SESSION['action'] == 'edit') {
+                    echo "<p class='success'>Student details updated successfully.</p>";
+                }
+                if ($_SESSION['action'] == 'delete') {
+                    echo "<p class='success'>Student deleted successfully.</p>";
+                }
+                $_SESSION['action'] = null;
+            }
 
             $sql = "SELECT student_id, student_name, age, medical_information
                 FROM students
@@ -64,15 +74,6 @@ $class_name = class_name($class);
                 echo "</tbody></table>";
             } else {
                 echo "<p>No students in your class.</p>";
-            }
-            if (isset($_SESSION['action'])) {
-                if($_SESSION['action'] == 'edit') {
-                    echo "<p class='success'>Student details updated successfully.</p>";
-                }
-                if ($_SESSION['action'] == 'delete') {
-                    echo "<p class='success'>Student deleted successfully.</p>";
-                }
-                $_SESSION['action'] = null;
             }
 
             ?>

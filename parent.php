@@ -40,6 +40,16 @@ $parent = $result['parent_name'];
             <h2>Welcome, <?php echo $parent; ?></h2>
             <p>Manage your children here.</p>
             <?php
+            
+            if (isset($_SESSION['action'])) {
+                if($_SESSION['action'] == 'edit') {
+                    echo "<p class='success'>Child details updated successfully.</p>";
+                }
+                if ($_SESSION['action'] == 'delete') {
+                    echo "<p class='success'>Child details deleted successfully.</p>";
+                }
+                $_SESSION['action'] = null;
+            }
 
             $sql = "SELECT students.student_id, student_name, age, class_id, student_address, medical_information
                 FROM students
@@ -64,15 +74,6 @@ $parent = $result['parent_name'];
                 echo "</tbody></table>";
             } else {
                 echo "<p>You have no registered children.</p>";
-            }
-            if (isset($_SESSION['action'])) {
-                if($_SESSION['action'] == 'edit') {
-                    echo "<p class='success'>Child details updated successfully.</p>";
-                }
-                if ($_SESSION['action'] == 'delete') {
-                    echo "<p class='success'>Child details deleted successfully.</p>";
-                }
-                $_SESSION['action'] = null;
             }
 
             ?>

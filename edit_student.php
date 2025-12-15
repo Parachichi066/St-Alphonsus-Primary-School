@@ -6,6 +6,35 @@ $id = $_GET['id'];
 $sql = "SELECT * FROM students WHERE student_id='$id'";
 $result = $conn->query($sql)->fetch_assoc();
 
+if(isset($_POST['cancel'])) {
+    redirect();
+}
+
+if (isset($_POST['save'])) {
+    $student_name = $_POST['student_name'];
+    $age = $_POST['age'];
+    $medical_information = $_POST['medical_information'];
+    if($_SESSION['role'] == 'admin') {
+        $class_id = $_POST['class_id'];
+    } else {
+        $class_id = $result['class_id'];
+    }
+    if($_SESSION['role'] == 'parent' || $_SESSION['role'] == 'admin') {
+        $student_address = $_POST['student_address'];
+    } else {
+        $student_address = $result['student_address'];
+    }
+
+    $sql = "UPDATE students SET student_name='$student_name', age='$age', class_id='$class_id' student_address='$student_address', medical_information='$medical_information' WHERE student_id='$id'";
+
+    if ($conn->query($sql) === TRUE) {
+        $_SESSION['action'] = 'edit';
+        redirect();
+    } else {
+        echo "<p class='error'>Error updating student details: " . $conn->error . "</p>";
+    }
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -77,38 +106,6 @@ $result = $conn->query($sql)->fetch_assoc();
                 <button type="submit" class="btn btn-primary" name="save">Save</button>
                 <button type="submit" class="btn btn-danger" name="cancel">Cancel</button>
             </form>
-            <?php
-
-            if(isset($_POST['cancel'])) {
-                redirect();
-            }
-
-            if (isset($_POST['save'])) {
-                $student_name = $_POST['student_name'];
-                $age = $_POST['age'];
-                $medical_information = $_POST['medical_information'];
-                if($_SESSION['role'] == 'admin') {
-                    $class_id = $_POST['class_id'];
-                } else {
-                    $class_id = $result['class_id'];
-                }
-                if($_SESSION['role'] == 'parent' || $_SESSION['role'] == 'admin') {
-                    $student_address = $_POST['student_address'];
-                } else {
-                    $student_address = $result['student_address'];
-                }
-
-                $sql = "UPDATE students SET student_name='$student_name', age='$age', class_id='$class_id' student_address='$student_address', medical_information='$medical_information' WHERE student_id='$id'";
-
-                if ($conn->query($sql) === TRUE) {
-                    $_SESSION['action'] = 'edit';
-                    redirect();
-                } else {
-                    echo "<p class='error'>Error updating student details: " . $conn->error . "</p>";
-                }
-            }
-
-            ?>
         </main>
     </body>
 </html>

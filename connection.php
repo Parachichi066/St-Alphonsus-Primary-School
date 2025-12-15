@@ -22,7 +22,9 @@ if(basename($_SERVER['SCRIPT_NAME']) !== 'login.php') {
 function redirect() {
     switch ($_SESSION['role']) {
         case 'admin':
-            header("Location: admin.php");
+            $location = 'admin.php';
+            $location .= isset($_SESSION['table']) ? "?{$_SESSION['table']}" : '';
+            header("Location: $location");
             break;
         case 'teacher':
             header("Location: teacher.php");

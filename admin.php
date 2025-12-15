@@ -44,8 +44,19 @@ if ($_SESSION['role'] != 'admin') {
                 </form>
             </div>
             <?php
+            
+            if (isset($_SESSION['action'])) {
+                if($_SESSION['action'] == 'edit') {
+                    echo "<p class='success'>Details updated successfully.</p>";
+                }
+                if ($_SESSION['action'] == 'delete') {
+                    echo "<p class='success'>Details deleted successfully.</p>";
+                }
+                $_SESSION['action'] = null;
+            }
 
             if(isset($_GET['students'])) {
+                $_SESSION['table'] = 'students';
 
                 $sql = "SELECT * FROM students";
                 
@@ -71,6 +82,8 @@ if ($_SESSION['role'] != 'admin') {
             }
 
             if(isset($_GET['parents'])) {
+                $_SESSION['table'] = 'parents';
+
                 $sql = "SELECT * FROM parents";
                 
                 $result = $conn->query($sql);
@@ -94,6 +107,8 @@ if ($_SESSION['role'] != 'admin') {
             }
 
             if(isset($_GET['teachers'])) {
+                $_SESSION['table'] = 'teachers';
+
                 $sql = "SELECT * FROM teachers";
                 
                 $result = $conn->query($sql);
@@ -120,6 +135,8 @@ if ($_SESSION['role'] != 'admin') {
             }
 
             if(isset($_GET['classes'])) {
+                $_SESSION['table'] = 'classes';
+
                 $sql = "SELECT classes.class_id, class_capacity, teacher_name
                         FROM classes
                         LEFT JOIN teachers ON classes.class_id = teachers.class_id";
@@ -141,16 +158,6 @@ if ($_SESSION['role'] != 'admin') {
                 } else {
                     echo "<p>There are no registered classes.</p>";
                 }
-            }
-
-            if (isset($_SESSION['action'])) {
-                if($_SESSION['action'] == 'edit') {
-                    echo "<p class='success'>Details updated successfully.</p>";
-                }
-                if ($_SESSION['action'] == 'delete') {
-                    echo "<p class='success'>Details deleted successfully.</p>";
-                }
-                $_SESSION['action'] = null;
             }
 
             ?>
