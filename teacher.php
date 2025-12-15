@@ -10,7 +10,6 @@ $sql = "SELECT * FROM teachers WHERE user_id='{$_SESSION['id']}'";
 $result = $conn->query($sql)->fetch_assoc();
 $teacher = $result['teacher_name'];
 $class = $result['class_id'];
-$class_name = class_name($class);
 
 ?>
 <!DOCTYPE html>

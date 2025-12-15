@@ -87,13 +87,18 @@ if (isset($_POST['save'])) {
                 <div class="mb-3">
                     <label for="class_id" class="form-label">Assigned Year</label>
                     <select class="form-select" id="class_id" name="class_id" required>
-                        <option value="1" <?php if ($result['class_id'] == 1) echo 'selected'; ?>>Reception Year</option>
-                        <option value="2" <?php if ($result['class_id'] == 2) echo 'selected'; ?>>Year One</option>
-                        <option value="3" <?php if ($result['class_id'] == 3) echo 'selected'; ?>>Year Two</option>
-                        <option value="4" <?php if ($result['class_id'] == 4) echo 'selected'; ?>>Year Three</option>
-                        <option value="5" <?php if ($result['class_id'] == 5) echo 'selected'; ?>>Year Four</option>
-                        <option value="6" <?php if ($result['class_id'] == 6) echo 'selected'; ?>>Year Five</option>
-                        <option value="7" <?php if ($result['class_id'] == 7) echo 'selected'; ?>>Year Six</option>
+                        <?php
+
+                        $sql_classes_list = "SELECT * FROM classes";
+                        $classes_result = $conn->query($sql_classes_list);
+                        if ($classes_result->num_rows > 0) {
+                            while ($class_row = $classes_result->fetch_assoc()) {
+                                $selected = ($class_row['class_id'] == $result['class_id']) ? 'selected' : '';
+                                echo "<option value='" . htmlspecialchars($class_row['class_id']) . "' $selected>" . htmlspecialchars($class_row['class_name']) . "</option>";
+                            }
+                        }
+
+                        ?>
                     </select>
                 </div>                
                 <button type="submit" class="btn btn-primary" name="save">Save</button>

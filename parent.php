@@ -53,8 +53,9 @@ $parent = $result['parent_name'];
 
             $sql = "SELECT students.student_id, student_name, age, class_id, student_address, medical_information
                 FROM students
-                INNER JOIN student_parent ON students.student_id = student_parent.student_id
-                INNER JOIN parents ON student_parent.parent_id = parents.parent_id
+                LEFT JOIN student_parent ON students.student_id = student_parent.student_id
+                LEFT JOIN parents ON student_parent.parent_id = parents.parent_id
+                LEFT JOIN classes ON students.class_id = classes.class_id
                 WHERE parents.user_id = {$_SESSION['id']}";            
             $result = $conn->query($sql);
             if ($result->num_rows > 0) {
@@ -65,7 +66,7 @@ $parent = $result['parent_name'];
                     echo "<tr>";
                     echo "<td>" . htmlspecialchars($row['student_name']) . "</td>";
                     echo "<td>" . htmlspecialchars($row['age']) . "</td>";
-                    echo "<td>" . class_name(htmlspecialchars($row['class_id'])) . "</td>";
+                    echo "<td>" . htmlspecialchars($row['class_name']) . "</td>";
                     echo "<td>" . htmlspecialchars($row['student_address']) . "</td>";
                     echo "<td>" . htmlspecialchars($row['medical_information']) . "</td>";
                     echo "<td><a href='edit_student.php?id=" . urlencode($row['student_id']) . "' class='btn btn-primary'>Edit</a>  <a href='delete_student.php?id=" . urlencode($row['student_id']) . "' class='btn btn-danger'>Delete</a></td>";

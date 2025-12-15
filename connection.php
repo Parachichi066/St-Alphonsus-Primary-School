@@ -35,25 +35,6 @@ function redirect() {
     }
 }
 
-function class_name($class_id) {
-    switch ($class_id) {
-        case 1:
-            return "Reception Year";
-        case 2:
-            return "Year One";
-        case 3:
-            return "Year Two";
-        case 4:
-            return "Year Three";
-        case 5:
-            return "Year Four";
-        case 6:
-            return "Year Five";
-        case 7:
-            return "Year Six";
-    }
-}
-
 function bg_check_status($status) {
     return $status ? "Cleared" : "Pending";
 }
