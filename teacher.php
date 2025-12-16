@@ -6,10 +6,16 @@ if ($_SESSION['role'] != 'teacher') {
     exit();
 }
 
-$sql = "SELECT * FROM teachers WHERE user_id='{$_SESSION['id']}'";
-$result = $conn->query($sql)->fetch_assoc();
-$teacher = $result['teacher_name'];
-$class = $result['class_id'];
+$sql = "SELECT teacher_name, classes.class_name, teachers.class_id FROM teachers
+        LEFT JOIN classes ON teachers.class_id = classes.class_id
+        WHERE user_id='{$_SESSION['id']}'";
+$result = $conn->query($sql);
+if($result->num_rows == 0) {
+    echo "Contact the administrator to set up your teacher profile.";
+    echo "<a href='logout.php'>Log out</a>";
+    exit();
+} else {
+$teacher = $result->fetch_assoc();
 
 ?>
 <!DOCTYPE html>
@@ -38,7 +44,7 @@ $class = $result['class_id'];
             </nav>
         </header>
         <section class="dashboard">
-            <h2>Welcome, <?php echo $teacher; ?> of <?php echo $class_name ?></h2>
+            <h2>Welcome, <?php echo $teacher['teacher_name']; ?> of <?php echo $teacher['class_name'] ?></h2>
             <p>Manage your classes and students here.</p>
             <?php
             
@@ -55,7 +61,7 @@ $class = $result['class_id'];
             $sql = "SELECT student_id, student_name, age, medical_information
                 FROM students
                 INNER JOIN classes ON students.class_id = classes.class_id
-                INNER JOIN teachers ON classes.teacher_id = teachers.teacher_id
+                INNER JOIN teachers ON classes.class_id = teachers.class_id
                 WHERE teachers.user_id = {$_SESSION['id']}";            
             $result = $conn->query($sql);
             if ($result->num_rows > 0) {
@@ -67,7 +73,7 @@ $class = $result['class_id'];
                     echo "<td>" . htmlspecialchars($row['student_name']) . "</td>";
                     echo "<td>" . htmlspecialchars($row['age']) . "</td>";
                     echo "<td>" . htmlspecialchars($row['medical_information']) . "</td>";
-                    echo "<td><a href='edit_student.php?id=" . urlencode($row['student_id']) . "' class='btn btn-primary'>Edit</a>  <a href='delete_student.php?id=" . urlencode($row['student_id']) . "' class='btn btn-danger'>Delete</a></td>";
+                    echo "<td><a href='edit_student.php?id=" . urlencode($row['student_id']) . "' class='btn btn-primary'>Edit</a>  <a href='delete_student.php?id=" . urlencode($row['student_id']) . "&class_id=" . urlencode($teacher['class_id']) . "' class='btn btn-danger'>Remove</a></td>";
                     echo "</tr>";
                 }
                 echo "</tbody></table>";
@@ -79,3 +85,6 @@ $class = $result['class_id'];
         </section>
     </body>
 </html>
+<?php
+}
+?>

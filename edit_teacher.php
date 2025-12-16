@@ -18,8 +18,9 @@ if (isset($_POST['save'])) {
     $teacher_salary = $_POST['teacher_salary'];
     $background_check = $_POST['background_check'];
     $class_id = $_POST['class_id'];
+    $user_id = $_POST['user_id'];
 
-    $sql = "UPDATE teachers SET teacher_name='$teacher_name', teacher_email='$teacher_email', teacher_telephone='$teacher_telephone', teacher_address='$teacher_address', teacher_salary='$teacher_salary', background_check='$background_check', class_id='$class_id' WHERE teacher_id='$id'";
+    $sql = "UPDATE teachers SET teacher_name='$teacher_name', teacher_email='$teacher_email', teacher_telephone='$teacher_telephone', teacher_address='$teacher_address', teacher_salary='$teacher_salary', background_check='$background_check', class_id='$class_id', user_id='$user_id' WHERE teacher_id='$id'";
 
     if ($conn->query($sql) === TRUE) {
         $_SESSION['action'] = 'edit';
@@ -100,7 +101,31 @@ if (isset($_POST['save'])) {
 
                         ?>
                     </select>
-                </div>                
+                </div>
+                <div class="mb-3">
+                    <label for="user_id" class="form-label">Linked User Account</label>
+                    <select class="form-select" id="user_id" name="user_id">
+                        <option value="">-- No User Account Linked --</option>
+                        <?php
+                        // 1. Fetch all users (you might want to filter WHERE role='parent')
+                        $user_sql = "SELECT user_id, username, role FROM users WHERE user_id != 1"; // Exclude admin
+                        $user_result = $conn->query($user_sql);
+
+                        if ($user_result->num_rows > 0) {
+                            while ($u_row = $user_result->fetch_assoc()) {
+                                // 2. Check if this user is the one currently saved for this parent
+                                $selected = ($u_row['user_id'] == $result['user_id']) ? 'selected' : '';
+                                
+                                // 3. Display the option (e.g., "john_doe (Teacher)")
+                                echo "<option value='" . $u_row['user_id'] . "' $selected>" 
+                                     . htmlspecialchars($u_row['username']) . " (" . htmlspecialchars($u_row['role']) . ")" 
+                                     . "</option>";
+                            }
+                        }
+                        ?>
+                    </select>
+                    <div class="form-text">Select the login account that belongs to this teacher.</div>
+                </div>
                 <button type="submit" class="btn btn-primary" name="save">Save</button>
                 <button type="submit" class="btn btn-danger" name="cancel">Cancel</button>
             </form>

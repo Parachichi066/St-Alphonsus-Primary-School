@@ -55,34 +55,34 @@ if (isset($_POST['add'])) {
             <form action="#" method="POST">
                 <div class="mb-3">
                     <label for="teacher_name" class="form-label">Teacher Name</label>
-                    <input type="text" class="form-control" id="teacher_name" name="teacher_name" required>
+                    <input type="text" class="form-control" id="teacher_name" name="teacher_name">
                 </div>
                 <div class="mb-3">
                     <label for="teacher_email" class="form-label">Teacher Email</label>
-                    <input type="email" class="form-control" id="teacher_email" name="teacher_email" required>
+                    <input type="email" class="form-control" id="teacher_email" name="teacher_email">
                 </div>
                 <div class="mb-3">
                     <label for="teacher_telephone" class="form-label">Teacher Telephone</label>
-                    <input type="tel" class="form-control" id="teacher_telephone" name="teacher_telephone" required>
+                    <input type="tel" class="form-control" id="teacher_telephone" name="teacher_telephone">
                 </div>
                 <div class="mb-3">
                     <label for="teacher_address" class="form-label">Teacher Address</label>
-                    <input type="text" class="form-control" id="teacher_address" name="teacher_address" required>
+                    <input type="text" class="form-control" id="teacher_address" name="teacher_address">
                 </div>
                 <div class="mb-3">
                     <label for="teacher_salary" class="form-label">Teacher Salary</label>
-                    <input type="float" class="form-control" id="teacher_salary" name="teacher_salary" required>
+                    <input type="float" class="form-control" id="teacher_salary" name="teacher_salary">
                 </div>
                 <div class="mb-3">
                     <label for="background_check" class="form-label">Background Check Status</label>
-                    <select class="form-select" id="background_check" name="background_check" required>
+                    <select class="form-select" id="background_check" name="background_check">
                         <option value="0">Pending</option>
                         <option value="1">Cleared</option>
                     </select>
                 </div>
                 <div class="mb-3">
                     <label for="class_id" class="form-label">Assigned Year</label>
-                    <select class="form-select" id="class_id" name="class_id" required>
+                    <select class="form-select" id="class_id" name="class_id">
                         <?php
 
                         $sql_classes_list = "SELECT * FROM classes";

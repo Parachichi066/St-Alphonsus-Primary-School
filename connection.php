@@ -11,7 +11,7 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
-if(basename($_SERVER['SCRIPT_NAME']) !== 'login.php') {
+if(basename($_SERVER['SCRIPT_NAME']) !== 'login.php' && basename($_SERVER['SCRIPT_NAME']) !== 'register.php') {
     session_start();
     if (!isset($_SESSION['id'])) {
         header("Location: login.php");

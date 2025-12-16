@@ -367,7 +367,8 @@ if ($_SESSION['role'] != 'admin') {
 
                 $sql = "SELECT classes.class_id, class_name, class_capacity, teacher_name
                         FROM classes
-                        LEFT JOIN teachers ON classes.class_id = teachers.class_id";
+                        LEFT JOIN teachers ON classes.class_id = teachers.class_id
+                        WHERE classes.class_id > 0";
                 
                 $result = $conn->query($sql);
                 if ($result->num_rows > 0) {

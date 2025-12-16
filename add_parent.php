@@ -53,19 +53,19 @@ if (isset($_POST['add'])) {
             <form action="#" method="POST">
                 <div class="mb-3">
                     <label for="parent_name" class="form-label">Parent Name</label>
-                    <input type="text" class="form-control" id="parent_name" name="parent_name" required>
+                    <input type="text" class="form-control" id="parent_name" name="parent_name">
                 </div>
                 <div class="mb-3">
                     <label for="parent_email" class="form-label">Parent Email</label>
-                    <input type="email" class="form-control" id="parent_email" name="parent_email" required>
+                    <input type="email" class="form-control" id="parent_email" name="parent_email">
                 </div>
                 <div class="mb-3">
                     <label for="parent_telephone" class="form-label">Parent Telephone</label>
-                    <input type="tel" class="form-control" id="parent_telephone" name="parent_telephone" required>
+                    <input type="tel" class="form-control" id="parent_telephone" name="parent_telephone">
                 </div>
                 <div class="mb-3">
                     <label for="parent_address" class="form-label">Parent Address</label>
-                    <input type="text" class="form-control" id="parent_address" name="parent_address" required>
+                    <input type="text" class="form-control" id="parent_address" name="parent_address">
                 </div>
                 <button type="submit" class="btn btn-primary" name="add">Add</button>
                 <button type="submit" class="btn btn-danger" name="cancel">Cancel</button>

@@ -50,11 +50,11 @@ if (isset($_POST['add'])) {
             <form action="#" method="POST">
                 <div class="mb-3">
                     <label for="class_name" class="form-label">Class Name</label>
-                    <input type="text" class="form-control" id="class_name" name="class_name" required>
+                    <input type="text" class="form-control" id="class_name" name="class_name">
                 </div>
                 <div class="mb-3">
                     <label for="class_capacity" class="form-label">Class Capacity</label>
-                    <input type="num" class="form-control" id="class_capacity" name="class_capacity" required>
+                    <input type="num" class="form-control" id="class_capacity" name="class_capacity">
                 </div>
                 <button type="submit" class="btn btn-primary" name="add">Add</button>
                 <button type="submit" class="btn btn-danger" name="cancel">Cancel</button>

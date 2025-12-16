@@ -54,15 +54,15 @@ if (isset($_POST['add'])) {
             <form action="#" method="POST">
                 <div class="mb-3">
                     <label for="student_name" class="form-label">Student Name</label>
-                    <input type="text" class="form-control" id="student_name" name="student_name" required>
+                    <input type="text" class="form-control" id="student_name" name="student_name">
                 </div>
                 <div class="mb-3">
                     <label for="age" class="form-label">Age</label>
-                    <input type="number" class="form-control" id="age" name="age" required>
+                    <input type="number" class="form-control" id="age" name="age">
                 </div>                
                 <div class="mb-3">
                     <label for="class_id" class="form-label">Assigned Year</label>
-                    <select class="form-select" id="class_id" name="class_id" required>
+                    <select class="form-select" id="class_id" name="class_id">
                         <?php
 
                         $sql_classes_list = "SELECT * FROM classes";
@@ -78,11 +78,11 @@ if (isset($_POST['add'])) {
                 </div>
                 <div class="mb-3">
                     <label for="student_address" class="form-label">Student Address</label>
-                    <input type="text" class="form-control" id="student_address" name="student_address" required>
+                    <input type="text" class="form-control" id="student_address" name="student_address">
                 </div>
                 <div class="mb-3">
                     <label for="medical_information" class="form-label">Medical Information</label>
-                    <input type="text" class="form-control" id="medical_information" name="medical_information" required>
+                    <input type="text" class="form-control" id="medical_information" name="medical_information">
                 </div>
                 <button type="submit" class="btn btn-primary" name="add">Add</button>
                 <button type="submit" class="btn btn-danger" name="cancel">Cancel</button>

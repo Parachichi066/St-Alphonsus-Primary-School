@@ -1,3 +1,8 @@
+<?php
+// Start session at the very top before any HTML
+session_start();
+include 'connection.php'; // Ensures database connection and redirect() function are available
+?>
 <!DOCTYPE html>
 <html lang="en">
     <head>
@@ -25,36 +30,68 @@
         </header>
         <section class="form student-form">
             <h2>Sign in to your account</h2>
-            <form action="#" method="POST">
-                <label for="username">Username:</label>
-                <input type="text" id="username" name="username" required><br><br>
-                <label for="password">Password:</label>
-                <input type="password" id="password" name="password" required><br><br>
-                <input type="submit" value="Submit">
+            
+            <form action="login.php" method="POST">
+                <div class="mb-3">
+                    <label for="username" class="form-label">Username:</label>
+                    <input type="text" class="form-control" id="username" name="username" required>
+                </div>
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password:</label>
+                    <input type="password" class="form-control" id="password" name="password" required>
+                </div>
+                <input type="submit" class="btn btn-primary" value="Sign In">
+                <div class="mt-3">
+                    <small>No account? <a href="register.php">Register here</a></small>
+                </div>
             </form>
-            <?php
-            session_start();
 
-            include 'connection.php';
+            <?php
+            if(isset($_SESSION['action']) && $_SESSION['action'] == 'register') {
+                echo "<p class='success mt-3'>Registration successful! Please log in.</p>";
+                $_SESSION['action'] = null;
+            }
 
             if($_SERVER["REQUEST_METHOD"] == "POST") {
                 $username = $_POST['username'];
                 $password = $_POST['password'];
 
-                $sql = "SELECT * FROM users WHERE BINARY username='$username' AND BINARY password='$password'";
-                $result = $conn->query($sql);
-                $user = $result->fetch_assoc();
-                $_SESSION['id'] = $user['user_id'];
-                $_SESSION['role'] = $user['role'];
+                // 1. Prepare Statement to prevent SQL Injection
+                // We ONLY check the username here, not the password yet
+                $stmt = $conn->prepare("SELECT user_id, username, password, role FROM users WHERE username = ?");
+                $stmt->bind_param("s", $username);
+                $stmt->execute();
+                $result = $stmt->get_result();
 
-                if ($result->num_rows > 0) {
-                    redirect();
+                // 2. Check if user exists
+                if ($result->num_rows === 1) {
+                    $user = $result->fetch_assoc();
+                    
+                    // 3. Verify the password hash
+                    // This checks the typed "password123" against the "$2y$10$..." hash in the DB
+                    if (password_verify($password, $user['password'])) {
+                        
+                        // Success: Set session variables
+                        $_SESSION['id'] = $user['user_id'];
+                        $_SESSION['role'] = $user['role'];
+                        
+                        // Redirect using your custom function
+                        redirect();
+                        exit();
+                        
+                    } else {
+                        // Password incorrect
+                        echo "<p class='invalid mt-3 text-danger'>Invalid username or password.</p>";
+                    }
                 } else {
-                    echo "<p class='invalid'>Invalid username or password. Please try again.</p>";
+                    // Username incorrect
+                    echo "<p class='invalid mt-3 text-danger'>Invalid username or password.</p>";
                 }
+                
+                $stmt->close();
             }
-
             ?>
         </section>
     </body>
 </html>
+

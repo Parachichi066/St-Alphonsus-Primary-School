@@ -7,8 +7,13 @@ if ($_SESSION['role'] != 'parent') {
 }
 
 $sql = "SELECT * FROM parents WHERE user_id='{$_SESSION['id']}'";
-$result = $conn->query($sql)->fetch_assoc();
-$parent = $result['parent_name'];
+$result = $conn->query($sql);
+if($result->num_rows == 0) {
+    echo "Contact the administrator to set up your parent profile.";
+    echo "<a href='logout.php'>Log out</a>";
+    exit();
+} else {
+$parent = $result->fetch_assoc();
 
 ?>
 <!DOCTYPE html>
@@ -37,7 +42,7 @@ $parent = $result['parent_name'];
             </nav>
         </header>
         <section class="dashboard">
-            <h2>Welcome, <?php echo $parent; ?></h2>
+            <h2>Welcome, <?php echo $parent['parent_name']; ?></h2>
             <p>Manage your children here.</p>
             <?php
             
@@ -51,7 +56,7 @@ $parent = $result['parent_name'];
                 $_SESSION['action'] = null;
             }
 
-            $sql = "SELECT students.student_id, student_name, age, class_id, student_address, medical_information
+            $sql = "SELECT students.student_id, student_name, age, classes.class_name, student_address, medical_information
                 FROM students
                 LEFT JOIN student_parent ON students.student_id = student_parent.student_id
                 LEFT JOIN parents ON student_parent.parent_id = parents.parent_id
@@ -69,7 +74,7 @@ $parent = $result['parent_name'];
                     echo "<td>" . htmlspecialchars($row['class_name']) . "</td>";
                     echo "<td>" . htmlspecialchars($row['student_address']) . "</td>";
                     echo "<td>" . htmlspecialchars($row['medical_information']) . "</td>";
-                    echo "<td><a href='edit_student.php?id=" . urlencode($row['student_id']) . "' class='btn btn-primary'>Edit</a>  <a href='delete_student.php?id=" . urlencode($row['student_id']) . "' class='btn btn-danger'>Delete</a></td>";
+                    echo "<td><a href='edit_student.php?id=" . urlencode($row['student_id']) . "' class='btn btn-primary'>Edit</a>  <a href='delete_student.php?id=" . urlencode($row['student_id']) . "&parent_id=" . urlencode($parent['parent_id']) . "' class='btn btn-danger'>Remove</a></td>";
                     echo "</tr>";
                 }
                 echo "</tbody></table>";
@@ -81,3 +86,6 @@ $parent = $result['parent_name'];
         </section>
     </body>
 </html>
+<?php
+}
+?>
