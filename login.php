@@ -1,7 +1,52 @@
 <?php
-// Start session at the very top before any HTML
+// Database connection and session start
 session_start();
-include 'connection.php'; // Ensures database connection and redirect() function are available
+include 'connection.php'; // Also ensures functions are available
+
+// Show registration success message to confirm user registration
+if(isset($_SESSION['action']) && $_SESSION['action'] == 'register') {
+    echo "<p class='alert alert-success mt-3'>Registration successful! Please log in.</p>";
+    unset($_SESSION['action']);
+}
+
+// Handle form submission
+if($_SERVER["REQUEST_METHOD"] == "POST") {
+    $username = $_POST['username'];
+    $password = $_POST['password'];
+
+    // Prepare and execute the SQL statement to prevent SQL injection
+    $stmt = $conn->prepare("SELECT user_id, username, password, role FROM users WHERE username = ?");
+    $stmt->bind_param("s", $username);
+    $stmt->execute();
+    $result = $stmt->get_result();
+
+    // Verify user credentials
+    if ($result->num_rows === 1) {
+        $user = $result->fetch_assoc();
+
+        // Verify the password
+        if (password_verify($password, $user['password'])) {
+            
+            // Set session variables
+            $_SESSION['id'] = $user['user_id'];
+            $_SESSION['role'] = $user['role'];
+            
+            // Redirect based on role
+            redirect();
+            exit();
+            
+        } else {
+            // Invalid password
+            echo "<p class='alert alert-danger mt-3 text-danger'>Invalid username or password.</p>";
+        }
+    } else {
+        // Invalid username
+        echo "<p class='alert alert-danger mt-3 text-danger'>Invalid username or password.</p>";
+    }
+    
+    // Close the statement to free resources
+    $stmt->close();
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -30,7 +75,6 @@ include 'connection.php'; // Ensures database connection and redirect() function
         </header>
         <section class="form student-form">
             <h2>Sign in to your account</h2>
-            
             <form action="login.php" method="POST">
                 <div class="mb-3">
                     <label for="username" class="form-label">Username:</label>
@@ -45,52 +89,6 @@ include 'connection.php'; // Ensures database connection and redirect() function
                     <small>No account? <a href="register.php">Register here</a></small>
                 </div>
             </form>
-
-            <?php
-            if(isset($_SESSION['action']) && $_SESSION['action'] == 'register') {
-                echo "<p class='success mt-3'>Registration successful! Please log in.</p>";
-                $_SESSION['action'] = null;
-            }
-
-            if($_SERVER["REQUEST_METHOD"] == "POST") {
-                $username = $_POST['username'];
-                $password = $_POST['password'];
-
-                // 1. Prepare Statement to prevent SQL Injection
-                // We ONLY check the username here, not the password yet
-                $stmt = $conn->prepare("SELECT user_id, username, password, role FROM users WHERE username = ?");
-                $stmt->bind_param("s", $username);
-                $stmt->execute();
-                $result = $stmt->get_result();
-
-                // 2. Check if user exists
-                if ($result->num_rows === 1) {
-                    $user = $result->fetch_assoc();
-                    
-                    // 3. Verify the password hash
-                    // This checks the typed "password123" against the "$2y$10$..." hash in the DB
-                    if (password_verify($password, $user['password'])) {
-                        
-                        // Success: Set session variables
-                        $_SESSION['id'] = $user['user_id'];
-                        $_SESSION['role'] = $user['role'];
-                        
-                        // Redirect using your custom function
-                        redirect();
-                        exit();
-                        
-                    } else {
-                        // Password incorrect
-                        echo "<p class='invalid mt-3 text-danger'>Invalid username or password.</p>";
-                    }
-                } else {
-                    // Username incorrect
-                    echo "<p class='invalid mt-3 text-danger'>Invalid username or password.</p>";
-                }
-                
-                $stmt->close();
-            }
-            ?>
         </section>
     </body>
 </html>

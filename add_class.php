@@ -1,22 +1,43 @@
 <?php
-
+// Add Class Functionality
 include "connection.php";
 
+// Check if user is admin
+if($_SESSION['role'] != 'admin') {
+    header("Location: login.php");
+    exit();
+}
+
+// Handle Cancel button
 if(isset($_POST['cancel'])) {
     redirect();
 }
 
+// Handle Add Class form submission
 if (isset($_POST['add'])) {
     $class_name = $_POST['class_name'];
     $class_capacity = $_POST['class_capacity'];
 
-    $sql = "INSERT INTO classes (class_name, class_capacity) VALUES ('$class_name', '$class_capacity')";
-    
-    if ($conn->query($sql) === TRUE) {
-        $_SESSION['action'] = 'edit';
-        redirect();
+    // Validate required fields
+    if (empty($class_name) || empty($class_capacity)) {
+        echo "<p class='alert alert-danger'>Class Name and Capacity are required fields.</p>";
     } else {
-        echo "<p class='error'>Error updating class details: " . $conn->error . "</p>";
+        // Prepare and execute SQL insert statement
+        $sql = "INSERT INTO classes (class_name, class_capacity) VALUES (?, ?)";
+            
+        $stmt = $conn->prepare($sql);
+        // s = string, i = integer
+        $stmt->bind_param("si", $class_name, $class_capacity);
+        
+        if ($stmt->execute()) {
+            $_SESSION['action'] = 'add'; // Set flash message for the next page
+            redirect();
+            exit();
+        } else {
+            // Error handling
+            echo "<p class='alert alert-danger'>Error creating class: " . $conn->error . "</p>";
+        }
+        $stmt->close();
     }
 }
 ?>

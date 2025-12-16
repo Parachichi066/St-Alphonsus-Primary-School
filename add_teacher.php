@@ -1,11 +1,19 @@
 <?php
-
+// Start session and include necessary functions and connections
 include "connection.php";
 
+// Check if user is admin
+if($_SESSION['role'] != 'admin') {
+    header("Location: login.php");
+    exit();
+}
+
+// Function to redirect to previous page
 if(isset($_POST['cancel'])) {
     redirect();
 }
 
+// Handle form submission to add a new teacher
 if (isset($_POST['add'])) {
     $teacher_name = $_POST['teacher_name'];
     $teacher_email = $_POST['teacher_email'];
@@ -15,13 +23,27 @@ if (isset($_POST['add'])) {
     $background_check = $_POST['background_check'];
     $class_id = $_POST['class_id'];
 
-    $sql = "INSERT INTO teachers (teacher_name, teacher_email, teacher_telephone, teacher_address, teacher_salary, background_check, class_id) VALUES ('$teacher_name', '$teacher_email', '$teacher_telephone', '$teacher_address', '$teacher_salary', '$background_check', '$class_id')";
+    if (empty($teacher_name) || empty($teacher_email) || empty($class_id)) {
+        echo "<p class='alert alert-danger'>Teacher Name, Email, and Assigned Year are required fields.</p>";
+    } else {
 
-    if ($conn->query($sql) === TRUE) {
+    // Prepare and bind
+    $sql = "INSERT INTO teachers (teacher_name, teacher_email, teacher_telephone, teacher_address, teacher_salary, background_check, class_id) VALUES (?, ?, ?, ?, ?, ?, ?)";
+    
+    $stmt = $conn->prepare($sql);
+    
+    // s=string, d=double (salary), i=integer
+    $stmt->bind_param("ssssdii", $teacher_name, $teacher_email, $teacher_telephone, $teacher_address, $teacher_salary, $background_check, $class_id);
+
+    // Execute the statement
+    if ($stmt->execute()) {
         $_SESSION['action'] = 'add';
         redirect();
+        exit();
     } else {
-        echo "<p class='error'>Error adding Teacher details: " . $conn->error . "</p>";
+        echo "<p class='alert alert-danger'>Error adding Teacher details: " . $conn->error . "</p>";
+    }
+    $stmt->close();
     }
 }
 ?>
@@ -84,7 +106,7 @@ if (isset($_POST['add'])) {
                     <label for="class_id" class="form-label">Assigned Year</label>
                     <select class="form-select" id="class_id" name="class_id">
                         <?php
-
+                        // Fetch classes from the database to populate the dropdown
                         $sql_classes_list = "SELECT * FROM classes";
                         $classes_result = $conn->query($sql_classes_list);
                         if ($classes_result->num_rows > 0) {

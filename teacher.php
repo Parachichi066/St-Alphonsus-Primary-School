@@ -1,22 +1,80 @@
 <?php
+/*
+ * Teacher Dashboard Controller
+ * ----------------------------
+ * Displays the specific class assigned to the logged-in teacher.
+ * Restricts access so teachers can only see students in THEIR class.
+ */
 
+// Start session and check user role
 include 'connection.php';
 if ($_SESSION['role'] != 'teacher') {
     header("Location: login.php");
     exit();
 }
 
-$sql = "SELECT teacher_name, classes.class_name, teachers.class_id FROM teachers
+// Initialize variables
+$teacher = null;
+$students_result = null;
+
+// Fetch Teacher Profile & Class Assignment
+// LEFT JOIN classes to find out which class this teacher is responsible for.
+$sql = "SELECT teacher_name, classes.class_name, teachers.class_id 
+        FROM teachers
         LEFT JOIN classes ON teachers.class_id = classes.class_id
-        WHERE user_id='{$_SESSION['id']}'";
-$result = $conn->query($sql);
+        WHERE user_id = ?";
+
+// Prepare and execute the statement
+$stmt = $conn->prepare($sql);
+$stmt->bind_param("i", $_SESSION['id']);
+$stmt->execute();
+$result = $stmt->get_result();
+
+// If no teacher profile found, prompt to contact admin.
 if($result->num_rows == 0) {
     echo "Contact the administrator to set up your teacher profile.";
-    echo "<a href='logout.php'>Log out</a>";
+    echo "<br><a href='logout.php'>Log out</a>";
     exit();
-} else {
-$teacher = $result->fetch_assoc();
+} 
 
+// Fetch teacher details
+$teacher = $result->fetch_assoc();
+$stmt->close();
+
+// Handle Feedback
+if (isset($_SESSION['action'])) {
+    if($_SESSION['action'] == 'edit') {
+        echo "<p class='alert alert-success'>Student details updated successfully.</p>";
+    } elseif ($_SESSION['action'] == 'delete') {
+        echo "<p class='alert alert-success'>Student deleted successfully.</p>";
+    }
+    unset($_SESSION['action']);
+}
+
+// Fetch Students in this Class
+// User ID links to the Teacher, then to the Class, then to the Students.
+$sql_students = "SELECT student_id, student_name, age, medical_information
+                 FROM students
+                 INNER JOIN classes ON students.class_id = classes.class_id
+                 INNER JOIN teachers ON classes.class_id = teachers.class_id
+                 WHERE teachers.user_id = ?";
+
+// Prepare and execute the statement
+$stmt_students = $conn->prepare($sql_students);
+$stmt_students->bind_param("i", $_SESSION['id']);
+$stmt_students->execute();
+$students_result = $stmt_students->get_result();
+
+// Feedback Messages
+if (isset($_SESSION['action'])) {
+    if($_SESSION['action'] == 'edit') {
+        echo "<p class='alert alert-success'>Student details updated successfully.</p>";
+    }
+    if ($_SESSION['action'] == 'delete') {
+        echo "<p class='alert alert-success'>Student deleted successfully.</p>";
+    }
+    unset($_SESSION['action']);
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -47,37 +105,23 @@ $teacher = $result->fetch_assoc();
             <h2>Welcome, <?php echo $teacher['teacher_name']; ?> of <?php echo $teacher['class_name'] ?></h2>
             <p>Manage your classes and students here.</p>
             <?php
-            
-            if (isset($_SESSION['action'])) {
-                if($_SESSION['action'] == 'edit') {
-                    echo "<p class='success'>Student details updated successfully.</p>";
-                }
-                if ($_SESSION['action'] == 'delete') {
-                    echo "<p class='success'>Student deleted successfully.</p>";
-                }
-                $_SESSION['action'] = null;
-            }
-
-            $sql = "SELECT student_id, student_name, age, medical_information
-                FROM students
-                INNER JOIN classes ON students.class_id = classes.class_id
-                INNER JOIN teachers ON classes.class_id = teachers.class_id
-                WHERE teachers.user_id = {$_SESSION['id']}";            
-            $result = $conn->query($sql);
-            if ($result->num_rows > 0) {
+            if ($students_result->num_rows > 0) {
+                // Display Students Table
                 echo "<table class='table table-striped'>";
                 echo "<thead><tr><th>Name</th><th>Age</th><th>Medical Info</th><th>Action</th></tr></thead>";
                 echo "<tbody>";
-                while($row = $result->fetch_assoc()) {
+                while($row = $students_result->fetch_assoc()) {
                     echo "<tr>";
                     echo "<td>" . htmlspecialchars($row['student_name']) . "</td>";
                     echo "<td>" . htmlspecialchars($row['age']) . "</td>";
                     echo "<td>" . htmlspecialchars($row['medical_information']) . "</td>";
-                    echo "<td><a href='edit_student.php?id=" . urlencode($row['student_id']) . "' class='btn btn-primary'>Edit</a>  <a href='delete_student.php?id=" . urlencode($row['student_id']) . "&class_id=" . urlencode($teacher['class_id']) . "' class='btn btn-danger'>Remove</a></td>";
+                    // Action buttons for Edit and Remove, passing student_id and class_id, with confirmation on delete
+                    echo "<td><a href='edit_student.php?id=" . urlencode($row['student_id']) . "' class='btn btn-primary'>Edit</a>  <a href='delete_student.php?id=" . urlencode($row['student_id']) . "&class_id=" . urlencode($teacher['class_id']) . "' class='btn btn-danger'onclick="return confirm('Are you sure you want to remove this student?');">Remove</a></td>";
                     echo "</tr>";
                 }
                 echo "</tbody></table>";
             } else {
+                // No students found
                 echo "<p>No students in your class.</p>";
             }
 
@@ -85,6 +129,3 @@ $teacher = $result->fetch_assoc();
         </section>
     </body>
 </html>
-<?php
-}
-?>

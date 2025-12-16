@@ -1,25 +1,53 @@
 <?php
+/* Add Student Functionality
+ * -------------------------
+ */
 
+// Start session and include necessary functions and connections
 include "connection.php";
 
+// Function to redirect forbidden users
+if (($_SESSION['role']) != 'admin') {
+    header("Location: login.php");
+    exit();
+}
+
+// Handle Cancel button
 if(isset($_POST['cancel'])) {
     redirect();
 }
 
+// Handle Add Student form submission
 if (isset($_POST['add'])) {
-    $student_name = $_POST['student_name'];
+    // Sanitize form inputs
+    $student_name = trim($_POST['student_name']);
     $age = $_POST['age'];
     $medical_information = $_POST['medical_information'];
     $class_id = $_POST['class_id'];
     $student_address = $_POST['student_address'];
-    
-    $sql = "INSERT INTO students (student_name, age, medical_information, class_id, student_address) VALUES ('$student_name', '$age', '$medical_information', '$class_id', '$student_address')";
 
-    if ($conn->query($sql) === TRUE) {
-        $_SESSION['action'] = 'add';
-        redirect();
+    // Validate required fields
+    if (empty($student_name) || empty($age) || empty($class_id)) {
+        echo "<p class='alert alert-danger'>Name, Age, and Assigned Year are required fields.</p>";
     } else {
-        echo "<p class='error'>Error adding student details: " . $conn->error . "</p>";
+    
+    // Prepare and execute SQL insert statement
+    $sql = "INSERT INTO students (student_name, age, medical_information, class_id, student_address) VALUES (?, ?, ?, ?, ?)";
+        
+    $stmt = $conn->prepare($sql);
+    
+    // s = string, i = integer
+    $stmt->bind_param("sisis", $student_name, $age, $medical_information, $class_id, $student_address);
+
+    if ($stmt->execute()) {
+        $_SESSION['action'] = 'add'; // Set flash message for the next page
+        redirect();
+        exit();
+    } else {
+        // Error handling
+        echo "<p class='alert alert-danger>Error adding student: " . $conn->error . "</p>";
+    }
+    $stmt->close();
     }
 }
 
@@ -64,7 +92,7 @@ if (isset($_POST['add'])) {
                     <label for="class_id" class="form-label">Assigned Year</label>
                     <select class="form-select" id="class_id" name="class_id">
                         <?php
-
+                        // Fetch classes from the database to populate the dropdown
                         $sql_classes_list = "SELECT * FROM classes";
                         $classes_result = $conn->query($sql_classes_list);
                         if ($classes_result->num_rows > 0) {

@@ -1,20 +1,20 @@
 <?php
-
+// Handle session and redirection
 include "connection.php";
 
-// --- HANDLE PARENT LINKING/UNLINKING ---
+// Handle linking and unlinking parents
 if (isset($_POST['link_parent'])) {
     $parent_id = $_POST['parent_id'];
     $student_id = $_GET['id'];
 
-    // 1. Check if already linked to avoid duplicates
+    // Checks if already linked to avoid duplicates
     $check_sql = "SELECT * FROM student_parent WHERE student_id = ? AND parent_id = ?";
     $stmt_check = $conn->prepare($check_sql);
     $stmt_check->bind_param("ii", $student_id, $parent_id);
     $stmt_check->execute();
     
     if ($stmt_check->get_result()->num_rows == 0) {
-        // 2. Link them
+        // Link them
         $stmt_link = $conn->prepare("INSERT INTO student_parent (student_id, parent_id) VALUES (?, ?)");
         $stmt_link->bind_param("ii", $student_id, $parent_id);
         if($stmt_link->execute()) {
@@ -22,15 +22,18 @@ if (isset($_POST['link_parent'])) {
         }
         $stmt_link->close();
     } else {
+        // Already linked
         echo "<div class='alert alert-warning m-3'>This parent is already linked.</div>";
     }
     $stmt_check->close();
 }
 
+// Unlink parent
 if (isset($_POST['unlink_parent'])) {
     $parent_id_to_remove = $_POST['remove_parent_id'];
     $student_id = $_GET['id'];
 
+    // Unlink them using prepared statement
     $stmt_unlink = $conn->prepare("DELETE FROM student_parent WHERE student_id = ? AND parent_id = ?");
     $stmt_unlink->bind_param("ii", $student_id, $parent_id_to_remove);
     if($stmt_unlink->execute()) {
@@ -40,35 +43,60 @@ if (isset($_POST['unlink_parent'])) {
 }
 
 $id = $_GET['id'];
-$sql = "SELECT * FROM students WHERE student_id='$id'";
-$result = $conn->query($sql)->fetch_assoc();
+$student = null;
 
+// Fetch current student details safely
+$stmt = $conn->prepare("SELECT * FROM students WHERE student_id = ?");
+$stmt->bind_param("i", $id);
+$stmt->execute();
+$result = $stmt->get_result();
+
+// Check if student exists
+if($result->num_rows == 0) { die("Student not found."); }
+$student = $result->fetch_assoc();
+$stmt->close();
+
+// Redirect function when cancelling
 if(isset($_POST['cancel'])) {
     redirect();
 }
 
+// Update student details
 if (isset($_POST['save'])) {
     $student_name = $_POST['student_name'];
     $age = $_POST['age'];
     $medical_information = $_POST['medical_information'];
+    // Only allow certain roles to update specific fields
     if($_SESSION['role'] == 'admin') {
         $class_id = $_POST['class_id'];
     } else {
         $class_id = $result['class_id'];
     }
+    // Only allow certain roles to update specific fields
     if($_SESSION['role'] == 'parent' || $_SESSION['role'] == 'admin') {
         $student_address = $_POST['student_address'];
     } else {
         $student_address = $result['student_address'];
     }
 
-    $sql = "UPDATE students SET student_name='$student_name', age='$age', class_id='$class_id', student_address='$student_address', medical_information='$medical_information' WHERE student_id='$id'";
-
-    if ($conn->query($sql) === TRUE) {
-        $_SESSION['action'] = 'edit';
-        redirect();
+    // Server-side validation
+    if(empty($student_name)) {
+        echo "<p class='alert alert-danger'>Student Name is required.</p>";
     } else {
-        echo "<p class='error'>Error updating student details: " . $conn->error . "</p>";
+        // Update using prepared statements to prevent SQL injection
+        $sql = "UPDATE students SET student_name=?, age=?, class_id=?, student_address=?, medical_information=? WHERE student_id=?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("sisssi", $student_name, $age, $class_id, $address, $medical, $id);
+
+        // Execute and check for success
+        if ($stmt->execute()) {
+            $_SESSION['action'] = 'edit';
+            redirect();
+            exit();
+        } else {
+            echo "<p class='alert alert-danger'>Error updating student: " . $conn->error . "</p>";
+        }
+        $stmt->close();
     }
 }
 
@@ -104,7 +132,7 @@ if (isset($_POST['save'])) {
                 <div class="mb-3">
                     <label for="student_name" class="form-label">Student Name</label>
                     <input type="text" class="form-control" id="student_name" name="student_name" value="<?php echo htmlspecialchars($result['student_name']); ?>" required>
-                </div>
+                <?php echo "hello"; ?></div>
                 <div class="mb-3">
                     <label for="age" class="form-label">Age</label>
                     <input type="number" class="form-control" id="age" name="age" value="<?php echo htmlspecialchars($result['age']); ?>" required>
@@ -118,7 +146,7 @@ if (isset($_POST['save'])) {
                     <label for="class_id" class="form-label">Assigned Year</label>
                     <select class="form-select" id="class_id" name="class_id" required>
                         <?php
-
+                        // Populate classes dropdown
                         $sql_classes_list = "SELECT * FROM classes";
                         $classes_result = $conn->query($sql_classes_list);
                         if ($classes_result->num_rows > 0) {
@@ -133,6 +161,7 @@ if (isset($_POST['save'])) {
                 </div>
                     <?php
                 }
+                // Only show address field to parents and admins
                 if ($_SESSION['role'] == 'parent' || $_SESSION['role'] == 'admin') {
                     ?>
                 <div class="mb-3">
@@ -150,7 +179,7 @@ if (isset($_POST['save'])) {
                 <button type="submit" class="btn btn-danger" name="cancel">Cancel</button>
             </form>
             <?php
-
+            // Only show parent management to admins
             if ($_SESSION['role'] == 'admin') {
 
             ?>

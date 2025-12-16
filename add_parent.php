@@ -1,24 +1,44 @@
 <?php
-
+// Start session and include necessary functions and connections
 include "connection.php";
 
+// Function to redirect to parents list
+if (!isset($_SESSION['role']) != 'admin') {
+    header("Location: login.php");
+}
+
+// Function to redirect to parents list
 if(isset($_POST['cancel'])) {
     redirect();
 }
 
+// Handle form submission for adding a parent
 if (isset($_POST['add'])) {
-    $parent_name = $_POST['parent_name'];
-    $parent_email = $_POST['parent_email'];
+    $parent_name = trim($_POST['parent_name']);
+    $parent_email = trim($_POST['parent_email']);
     $parent_telephone = $_POST['parent_telephone'];
     $parent_address = $_POST['parent_address'];
 
-    $sql = "INSERT INTO parents (parent_name, parent_email, parent_telephone, parent_address) VALUES ('$parent_name', '$parent_email', '$parent_telephone', '$parent_address')";
+    if (empty($parent_name) || empty($parent_email)) {
+        echo "<p class='alert alert-danger'>Parent Name and Email are required fields.</p>";
+    } else {
 
-    if ($conn->query($sql) === TRUE) {
+    // Validate required fields
+    $sql = "INSERT INTO parents (parent_name, parent_email, parent_telephone, parent_address) VALUES (?, ?, ?, ?)";
+    
+    // Prepare and bind
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param("ssss", $parent_name, $parent_email, $parent_telephone, $parent_address);
+
+    if ($stmt->execute()) {
         $_SESSION['action'] = 'add';
         redirect();
+        exit();
     } else {
-        echo "<p class='error'>Error adding parent details: " . $conn->error . "</p>";
+        // Error handling
+        echo "<p class='alert alert-danger'>Error adding parent details: " . $conn->error . "</p>";
+    }
+    stmt->close();
     }
 }
             

@@ -1,15 +1,39 @@
 <?php
-
+// Handles connections, sessions, and redirections
 include "connection.php";
 
+// Ensure only admin users can access this page
+if ($_SESSION['role'] != 'admin') {
+    header("Location: login.php");
+    exit();
+}
+// Assign teacher ID from GET parameter
 $id = $_GET['id'];
-$sql = "SELECT * FROM teachers WHERE teacher_id='$id'";
-$result = $conn->query($sql)->fetch_assoc();
+$teacher = null;
+$error_msg = "";
 
-if(isset($_POST['cancel'])) {
-    redirect();
+// Fetch existing teacher details
+$stmt = $conn->prepare("SELECT * FROM teachers WHERE teacher_id = ?");
+$stmt->bind_param("i", $id);
+$stmt->execute();
+$result = $stmt->get_result();
+
+// Check if teacher exists
+if($result->num_rows == 0) {
+    die("Teacher not found.");
 }
 
+// Fetch teacher data
+$teacher = $result->fetch_assoc();
+$stmt->close();
+
+// Handle form cancellations
+if(isset($_POST['cancel'])) {
+    redirect();
+    exit();
+}
+
+// Handle form submissions for saving changes
 if (isset($_POST['save'])) {
     $teacher_name = $_POST['teacher_name'];
     $teacher_email = $_POST['teacher_email'];
@@ -20,13 +44,39 @@ if (isset($_POST['save'])) {
     $class_id = $_POST['class_id'];
     $user_id = $_POST['user_id'];
 
-    $sql = "UPDATE teachers SET teacher_name='$teacher_name', teacher_email='$teacher_email', teacher_telephone='$teacher_telephone', teacher_address='$teacher_address', teacher_salary='$teacher_salary', background_check='$background_check', class_id='$class_id', user_id='$user_id' WHERE teacher_id='$id'";
+    // Set NULL for teachers without linked user accounts
+    $user_id = !empty($_POST['user_id']) ? $_POST['user_id'] : NULL;
 
-    if ($conn->query($sql) === TRUE) {
-        $_SESSION['action'] = 'edit';
-        redirect();
+    // Basic validation
+    if(empty($teacher_name) || empty($teacher_email)) {
+        echo "<p class='alert alert-danger'>Name and Email are required.</p>";
     } else {
-        echo "<p class='error'>Error updating Teacher details: " . $conn->error . "</p>";
+        // Handle "No Class Assigned" (empty class_id)
+        $class_id_sql = empty($class_id) ? null : $class_id;
+
+        $sql = "UPDATE teachers SET 
+                teacher_name=?, teacher_email=?, teacher_telephone=?, 
+                teacher_address=?, teacher_salary=?, background_check=?, 
+                class_id=?, user_id=? 
+                WHERE teacher_id=?";
+
+        $stmt = $conn->prepare($sql);
+        // Types: s=string, d=double, i=integer
+        $stmt->bind_param("ssssdsiii", 
+            $teacher_name, $teacher_email, $teacher_telephone, 
+            $teacher_address, $teacher_salary, $background_check, 
+            $class_id_sql, $user_id, $id
+        );
+        // Execute and check for success
+        if ($stmt->execute()) {
+            $_SESSION['action'] = 'edit';
+            redirect();
+            exit();
+        } else {
+            // Display error message
+            echo "<p class='alert alert-danger'>Error updating teacher: " . $conn->error . "</p>";
+        }
+        $stmt->close();
     }
 }
 ?>
@@ -90,10 +140,12 @@ if (isset($_POST['save'])) {
                     <select class="form-select" id="class_id" name="class_id" required>
                         <?php
 
+                        // Fetch all classes for the dropdown
                         $sql_classes_list = "SELECT * FROM classes";
                         $classes_result = $conn->query($sql_classes_list);
                         if ($classes_result->num_rows > 0) {
                             while ($class_row = $classes_result->fetch_assoc()) {
+                                // Check if this class is the one currently assigned to the teacher
                                 $selected = ($class_row['class_id'] == $result['class_id']) ? 'selected' : '';
                                 echo "<option value='" . htmlspecialchars($class_row['class_id']) . "' $selected>" . htmlspecialchars($class_row['class_name']) . "</option>";
                             }
@@ -107,16 +159,16 @@ if (isset($_POST['save'])) {
                     <select class="form-select" id="user_id" name="user_id">
                         <option value="">-- No User Account Linked --</option>
                         <?php
-                        // 1. Fetch all users (you might want to filter WHERE role='parent')
+                        // Fetch all users except admin
                         $user_sql = "SELECT user_id, username, role FROM users WHERE user_id != 1"; // Exclude admin
                         $user_result = $conn->query($user_sql);
 
                         if ($user_result->num_rows > 0) {
                             while ($u_row = $user_result->fetch_assoc()) {
-                                // 2. Check if this user is the one currently saved for this parent
+                                // Check if this user is the one currently saved for this parent
                                 $selected = ($u_row['user_id'] == $result['user_id']) ? 'selected' : '';
                                 
-                                // 3. Display the option (e.g., "john_doe (Teacher)")
+                                // Display the options as "john.doe (Teacher)"
                                 echo "<option value='" . $u_row['user_id'] . "' $selected>" 
                                      . htmlspecialchars($u_row['username']) . " (" . htmlspecialchars($u_row['role']) . ")" 
                                      . "</option>";

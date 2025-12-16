@@ -1,19 +1,62 @@
 <?php
+/*
+ * Parent Dashboard Controller
+ * Displays the list of children linked to the logged-in parent.
+ * Uses SQL JOINS to connect Parents -> Student_Parent -> Students -> Classes.
+ */
 
+// Start session and include database connection
 include 'connection.php';
+
+// Check if user is logged in and is a parent
 if ($_SESSION['role'] != 'parent') {
     header("Location: login.php");
     exit();
 }
+// Initialize variables
+$parent = null;
+$students_result = null;
 
-$sql = "SELECT * FROM parents WHERE user_id='{$_SESSION['id']}'";
-$result = $conn->query($sql);
+// Prepared statement to securely fetch the parent's details based on their User ID.
+$stmt = $conn->prepare("SELECT * FROM parents WHERE user_id = ?");
+$stmt->bind_param("i", $_SESSION['id']); // 'i' for integer
+$stmt->execute();
+$result = $stmt->get_result();
+
+// If no parent profile found, prompt to contact admin.
 if($result->num_rows == 0) {
     echo "Contact the administrator to set up your parent profile.";
-    echo "<a href='logout.php'>Log out</a>";
+    echo "<br><a href='logout.php'>Log out</a>";
     exit();
-} else {
+} 
+
+// Fetch parent details
 $parent = $result->fetch_assoc();
+$stmt->close();
+
+// Handle Feedback Messages
+if (isset($_SESSION['action'])) {
+    if($_SESSION['action'] == 'edit') {
+        echo "<p class='alert alert-success'>Child details updated successfully.</p>";
+    } elseif ($_SESSION['action'] == 'delete') {
+        echo "<p class='alert alert-success'>Child details deleted successfully.</p>";
+    }
+    unset($_SESSION['action']); // Clear message after displaying
+}
+
+// Fetch Children Data by joining 4 tables (students, student_parent, parents, classes) to get the child's name, class, and medical info.
+$sql = "SELECT students.student_id, student_name, age, classes.class_name, student_address, medical_information
+        FROM students
+        LEFT JOIN student_parent ON students.student_id = student_parent.student_id
+        LEFT JOIN parents ON student_parent.parent_id = parents.parent_id
+        LEFT JOIN classes ON students.class_id = classes.class_id
+        WHERE parents.user_id = ?";
+
+// Prepare and execute the statement
+$stmt_students = $conn->prepare($sql);
+$stmt_students->bind_param("i", $_SESSION['id']);
+$stmt_students->execute();
+$students_result = $stmt_students->get_result();
 
 ?>
 <!DOCTYPE html>
@@ -45,29 +88,12 @@ $parent = $result->fetch_assoc();
             <h2>Welcome, <?php echo $parent['parent_name']; ?></h2>
             <p>Manage your children here.</p>
             <?php
-            
-            if (isset($_SESSION['action'])) {
-                if($_SESSION['action'] == 'edit') {
-                    echo "<p class='success'>Child details updated successfully.</p>";
-                }
-                if ($_SESSION['action'] == 'delete') {
-                    echo "<p class='success'>Child details deleted successfully.</p>";
-                }
-                $_SESSION['action'] = null;
-            }
-
-            $sql = "SELECT students.student_id, student_name, age, classes.class_name, student_address, medical_information
-                FROM students
-                LEFT JOIN student_parent ON students.student_id = student_parent.student_id
-                LEFT JOIN parents ON student_parent.parent_id = parents.parent_id
-                LEFT JOIN classes ON students.class_id = classes.class_id
-                WHERE parents.user_id = {$_SESSION['id']}";            
-            $result = $conn->query($sql);
-            if ($result->num_rows > 0) {
+            if ($students_result->num_rows > 0) {
+                // Display children in a table
                 echo "<table class='table table-striped'>";
                 echo "<thead><tr><th>Name</th><th>Age</th><th>Year</th><th>Address</th><th>Medical Info</th><th>Action</th></tr></thead>";
                 echo "<tbody>";
-                while($row = $result->fetch_assoc()) {
+                while($row = $students_result->fetch_assoc()) {
                     echo "<tr>";
                     echo "<td>" . htmlspecialchars($row['student_name']) . "</td>";
                     echo "<td>" . htmlspecialchars($row['age']) . "</td>";
@@ -79,6 +105,7 @@ $parent = $result->fetch_assoc();
                 }
                 echo "</tbody></table>";
             } else {
+                // No children found
                 echo "<p>You have no registered children.</p>";
             }
 
@@ -86,6 +113,3 @@ $parent = $result->fetch_assoc();
         </section>
     </body>
 </html>
-<?php
-}
-?>

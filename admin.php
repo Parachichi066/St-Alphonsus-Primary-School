@@ -1,5 +1,11 @@
 <?php
+/*
+ * Admin Dashboard Controller
+ * --------------------------
+ * The central hub for school administration.
+ */
 
+// Start session and include database connection
 include 'connection.php';
 if ($_SESSION['role'] != 'admin') {
     header("Location: login.php");
@@ -34,35 +40,44 @@ if ($_SESSION['role'] != 'admin') {
         </header>
         <section class="dashboard">
             <h2>Welcome, Admin</h2>
-            <p>Manage the school here.</p>
+            <p class="text-muted">Manage the school here.</p>
             <div class="admin-actions">
                 <form method="get">
-                    <button class="btn btn-primary" type="submit" name="students">Manage Students</button>
-                    <button class="btn btn-primary" type="submit" name="parents">Manage Parents</button>
-                    <button class="btn btn-primary" type="submit" name="teachers">Manage Teachers</button>
-                    <button class="btn btn-primary" type="submit" name="classes">Manage Classes</button>
+                    <button class="btn btn-primary" type="submit" name="students" value="1">Manage Students</button>
+                    <button class="btn btn-primary" type="submit" name="parents" value="1">Manage Parents</button>
+                    <button class="btn btn-primary" type="submit" name="teachers" value="1">Manage Teachers</button>
+                    <button class="btn btn-primary" type="submit" name="classes" value="1">Manage Classes</button>
                 </form>
             </div>
             <?php
-            
+            // Feedback Messages for CRUD Operations
             if (isset($_SESSION['action'])) {
-                if($_SESSION['action'] == 'edit') {
-                    echo "<p class='success'>Details updated successfully.</p>";
+                switch ($_SESSION['action']) {
+                    case 'add':
+                        echo "<div class='alert alert-success'>Record added successfully.</div>";
+                        break;
+                    case 'edit':
+                        echo "<div class='alert alert-success'>Record updated successfully.</div>";
+                        break;
+                    case 'delete':
+                        echo "<div class='alert alert-success'>Record deleted successfully.</div>";
+                        break;
+                    default:
+                        echo "<div class='alert alert-danger'>An error occurred. Please try again.</div>";
+                        break;
                 }
-                if ($_SESSION['action'] == 'delete') {
-                    echo "<p class='success'>Details deleted successfully.</p>";
-                }
-                if ($_SESSION['action'] == 'add') {
-                    echo "<p class='success'>Details added successfully.</p>";
-                }
-                $_SESSION['action'] = null;
+                unset($_SESSION['action']);
             }
 
+            /*-------------------
+            * STUDENTS MANAGEMENT
+            * -------------------
+            * View, filter, add, edit, and delete student records.
+            */
             if(isset($_GET['students'])) {
                 $_SESSION['table'] = 'students';
 
-                // --- 1. FILTER FORM ---
-                // We add a form above the table to capture search inputs
+                // Form above the table to capture search inputs
                 ?>
                 <div class="card mb-3 p-3 bg-light">
                     <form method="GET" class="row g-3">
@@ -78,21 +93,20 @@ if ($_SESSION['role'] != 'admin') {
                             <select name="filter_class" class="form-select">
                                 <option value="">-- All Classes --</option>
                                 <?php
-                                // 1. Fetch all classes from the database
-                                // We order by class_name so the dropdown looks neat
+                                // Fetch  all classes from the database
                                 $class_sql = "SELECT class_id, class_name FROM classes";
                                 $class_result = $conn->query($class_sql);
 
                                 if ($class_result->num_rows > 0) {
-                                    // 2. Loop through each class found
+                                    // Loop through each class found
                                     while($c_row = $class_result->fetch_assoc()) {
-                                        // 3. Check if this option was previously selected (Sticky Input)
+                                        // Check if this option was previously selected (Sticky Input)
                                         $selected = '';
                                         if (isset($_GET['filter_class']) && $_GET['filter_class'] == $c_row['class_id']) {
                                             $selected = 'selected';
                                         }
 
-                                        // 4. Output the option tag
+                                        // Output the option tag
                                         echo "<option value='" . htmlspecialchars($c_row['class_id']) . "' $selected>" . htmlspecialchars($c_row['class_name']) . "</option>";
                                     }
                                 }
@@ -108,14 +122,12 @@ if ($_SESSION['role'] != 'admin') {
                     </form>
                 </div>
                 <?php
-
-                // --- 2. DYNAMIC SQL CONSTRUCTION ---
                 
-                // Start with the base query
+                // Dynamic Sql Query Construction
                 $sql = "SELECT students.*, classes.class_name 
                         FROM students
                         LEFT JOIN classes ON students.class_id = classes.class_id
-                        WHERE 1=1"; // 'WHERE 1=1' is a trick that allows us to append 'AND' conditions easily
+                        WHERE 1=1"; // 'Allows easy appending of AND conditions
 
                 $params = []; // Array to store parameters for binding
                 $types = "";  // String to store types (s = string, i = integer)
@@ -123,7 +135,7 @@ if ($_SESSION['role'] != 'admin') {
                 // Check if Name Search is used
                 if (!empty($_GET['search_name'])) {
                     $sql .= " AND students.student_name LIKE ?";
-                    $params[] = "%" . $_GET['search_name'] . "%"; // Add wildcards for partial match
+                    $params[] = $_GET['search_name'] . "%"; // Add wildcards for partial match
                     $types .= "s";
                 }
 
@@ -134,7 +146,7 @@ if ($_SESSION['role'] != 'admin') {
                     $types .= "i";
                 }
 
-                // --- 3. SECURE EXECUTION (Prepared Statements) ---
+                // Prepared Statements to prevent SQL Injection
                 $stmt = $conn->prepare($sql);
 
                 if (!empty($params)) {
@@ -145,7 +157,7 @@ if ($_SESSION['role'] != 'admin') {
                 $stmt->execute();
                 $result = $stmt->get_result();
 
-                // --- 4. DISPLAY RESULTS ---
+                // Display Results in a Table
                 if ($result->num_rows > 0) {
                     echo "<table class='table table-striped'>";
                     echo "<thead><tr><th>Name</th><th>Age</th><th>Year</th><th>Address</th><th>Medical Info</th><th>Action</th></tr></thead>";
@@ -172,10 +184,15 @@ if ($_SESSION['role'] != 'admin') {
                 $stmt->close();
             }
 
+            /*-------------------
+            * PARENTS MANAGEMENT
+            * -------------------
+            * View, filter, add, edit, and delete parent records.
+            */
             if(isset($_GET['parents'])) {
                 $_SESSION['table'] = 'parents';
 
-                // --- 1. PARENT FILTER FORM ---
+                // Parent Filter Form
                 ?>
                 <div class="card mb-3 p-3 bg-light">
                     <form method="GET" class="row g-3">
@@ -195,7 +212,7 @@ if ($_SESSION['role'] != 'admin') {
                 </div>
                 <?php
 
-                // --- 2. DYNAMIC SQL ---
+                // Dynamic SQL Construction
                 $sql = "SELECT * FROM parents WHERE 1=1";
                 $params = [];
                 $types = "";
@@ -207,7 +224,7 @@ if ($_SESSION['role'] != 'admin') {
                     $types .= "s";
                 }
 
-                // --- 3. EXECUTE ---
+                // Execute Prepared Statement
                 $stmt = $conn->prepare($sql);
                 if (!empty($params)) {
                     $stmt->bind_param($types, ...$params);
@@ -215,7 +232,7 @@ if ($_SESSION['role'] != 'admin') {
                 $stmt->execute();
                 $result = $stmt->get_result();
 
-                // --- 4. DISPLAY ---
+                // Teacher Table
                 if ($result->num_rows > 0) {
                     echo "<table class='table table-striped'>";
                     echo "<thead><tr><th>Name</th><th>Email</th><th>Telephone</th><th>Address</th><th>Action</th></tr></thead>";
@@ -234,6 +251,7 @@ if ($_SESSION['role'] != 'admin') {
                     }
                     echo "</tbody></table>";
                 } else {
+                    // No Results Found Message
                     echo "<div class='alert alert-warning'>No parents found matching your filters.</div>";
                 }
                 $stmt->close();
@@ -242,7 +260,7 @@ if ($_SESSION['role'] != 'admin') {
             if(isset($_GET['teachers'])) {
                 $_SESSION['table'] = 'teachers';
 
-                // --- 1. TEACHER FILTER FORM ---
+                // Teacher Filter Form
                 ?>
                 <div class="card mb-3 p-3 bg-light">
                     <form method="GET" class="row g-3">
@@ -258,7 +276,7 @@ if ($_SESSION['role'] != 'admin') {
                             <select name="filter_teacher_class" class="form-select">
                                 <option value="">-- All Assigned Classes --</option>
                                 <?php
-                                // Dynamic Loop for Classes
+                                // Dynamic Loop to display Classes
                                 $class_sql = "SELECT class_id, class_name FROM classes";
                                 $c_result = $conn->query($class_sql);
                                 while($c_row = $c_result->fetch_assoc()) {
@@ -286,8 +304,7 @@ if ($_SESSION['role'] != 'admin') {
                 </div>
                 <?php
 
-                // --- 2. DYNAMIC SQL ---
-                // Note: We join classes so we can display the class name, even if filtering by ID
+                // Dynamic SQL Construction
                 $sql = "SELECT teachers.*, classes.class_name 
                         FROM teachers
                         LEFT JOIN classes ON teachers.class_id = classes.class_id
@@ -311,14 +328,13 @@ if ($_SESSION['role'] != 'admin') {
                 }
 
                 // Background Check Filter
-                // Note: Assuming 'background_check' is stored as 1/0 or similar in your DB
                 if (isset($_GET['filter_bg']) && $_GET['filter_bg'] !== '') {
                     $sql .= " AND background_check = ?";
                     $params[] = $_GET['filter_bg'];
-                    $types .= "s"; // using 's' is generally safe, or 'i' if strictly integer
+                    $types .= "i"; // Since background_check is stored as boolean/integer (0 or 1)
                 }
 
-                // --- 3. EXECUTE ---
+                // Execute Prepared Statement
                 $stmt = $conn->prepare($sql);
                 if (!empty($params)) {
                     $stmt->bind_param($types, ...$params);
@@ -326,7 +342,7 @@ if ($_SESSION['role'] != 'admin') {
                 $stmt->execute();
                 $result = $stmt->get_result();
 
-                // --- 4. DISPLAY ---
+                // Display Teacher Table
                 if ($result->num_rows > 0) {
                     echo "<table class='table table-striped'>";
                     echo "<thead><tr><th>Name</th><th>Email</th><th>Telephone</th><th>Salary</th><th>Background Check</th><th>Assigned Year</th><th>Action</th></tr></thead>";
@@ -347,14 +363,20 @@ if ($_SESSION['role'] != 'admin') {
                     }
                     echo "</tbody></table>";
                 } else {
+                    // No Results Found Message
                     echo "<div class='alert alert-warning'>No teachers found matching your filters.</div>";
                 }
                 $stmt->close();
             }
 
+            /*-------------------
+            * CLASSES MANAGEMENT
+            * -------------------
+            * View, add, edit, and delete class records.
+            */
             if(isset($_GET['classes'])) {
                 $_SESSION['table'] = 'classes';
-
+                // Class Management Form
                 ?>
                 <div class="card mb-3 p-3 bg-light">
                     <form method="GET" class="row g-3">
@@ -364,12 +386,13 @@ if ($_SESSION['role'] != 'admin') {
                     </form>
                 </div>
                 <?php
-
+                // Fetch and Display Classes
                 $sql = "SELECT classes.class_id, class_name, class_capacity, teacher_name
                         FROM classes
                         LEFT JOIN teachers ON classes.class_id = teachers.class_id
                         WHERE classes.class_id > 0";
                 
+                // Execute Query
                 $result = $conn->query($sql);
                 if ($result->num_rows > 0) {
                     echo "<table class='table table-striped'>";
@@ -385,6 +408,7 @@ if ($_SESSION['role'] != 'admin') {
                     }
                     echo "</tbody></table>";
                 } else {
+                    // No Classes Found Message
                     echo "<p>There are no registered classes.</p>";
                 }
             }

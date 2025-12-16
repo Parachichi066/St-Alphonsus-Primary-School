@@ -1,47 +1,51 @@
 <?php
+// Start session and include database connection
 session_start();
 include 'connection.php';
 
-// Handle Form Submission
+// Check if the form is submitted
 if (isset($_POST['register'])) {
-    $username = $_POST['username'];
+    // Remove whitespace and get form data
+    $username = trim($_POST['username']);
     $password = $_POST['password'];
     $confirm_password = $_POST['confirm_password'];
     $role = $_POST['role']; 
 
-    // 1. Basic Validation
+    // Validate form data on the server side
     if (empty($username) || empty($password) || empty($role)) {
         $error = "All fields are required.";
     } elseif ($password !== $confirm_password) {
         $error = "Passwords do not match.";
     } else {
-        // 2. Check if username already exists
+        // Check if username already exists
         $check_stmt = $conn->prepare("SELECT user_id FROM users WHERE username = ?");
         $check_stmt->bind_param("s", $username);
         $check_stmt->execute();
         $check_result = $check_stmt->get_result();
 
         if ($check_result->num_rows > 0) {
+            // Username already taken
             $error = "Username is already taken. Please choose another.";
         } else {
-            // 3. Hash the password (CRITICAL SECURITY STEP)
-            // Never store plain text passwords!
+            // Hash the password and insert new user into the database
             $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-
-            // 4. Insert into database
             $insert_stmt = $conn->prepare("INSERT INTO users (username, password, role) VALUES (?, ?, ?)");
             $insert_stmt->bind_param("sss", $username, $hashed_password, $role);
 
+            // Execute the insert statement
             if ($insert_stmt->execute()) {
-                // Success: Redirect to login page
+                // Registration successful, redirect to login page, display success message
                 $_SESSION['action'] = 'register';
                 header("Location: login.php");
                 exit();
             } else {
+                // Error handling
                 $error = "Registration failed: " . $conn->error;
             }
+            // Close the insert statement
             $insert_stmt->close();
         }
+        // Close the check statement
         $check_stmt->close();
     }
 }
@@ -93,7 +97,6 @@ if (isset($_POST['register'])) {
                     <button type="submit" name="register" class="btn btn-primary w-100">Register</button>
                 
                 </form>
-                
                 <div class="mt-3 text-center">
                     <small>Already have an account? <a href="login.php">Login here</a></small>
                 </div>
