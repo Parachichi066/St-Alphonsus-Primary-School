@@ -1,26 +1,56 @@
 <?php
-
+// Include session, connection and redirect functions
 include "connection.php";
 
-$id = $_GET['id'];
-$sql = "SELECT * FROM classes WHERE class_id='$id'";
-$result = $conn->query($sql)->fetch_assoc();
-
-if(isset($_POST['cancel'])) {
-    redirect();
+// Redirect if not admin
+if ($_SESSION['role'] != 'admin') {
+    header('Location: login.php');
+    exit;
 }
 
+// Function to redirect to classes list
+$id = $_GET['id'];
+$result = null;
+
+// Fetch class details
+$stmt = $conn->prepare("SELECT * FROM classes WHERE class_id = ?");
+$stmt->bind_param("i", $id);
+$stmt->execute();
+$res = $stmt->get_result();
+// Check if class exists
+if($res->num_rows == 0) { die("Class not found."); }
+$result = $res->fetch_assoc();
+$stmt->close();
+
+// Handle Cancel
+if(isset($_POST['cancel'])) {
+    redirect();
+    exit();
+}
+
+// Handle Save
 if (isset($_POST['save'])) {
-    $class_name = $_POST['class_name'];
+    $class_name = trim($_POST['class_name']);
     $class_capacity = $_POST['class_capacity'];
 
-    $sql = "UPDATE classes SET class_name='$class_name', class_capacity='$class_capacity' WHERE class_id='$id'";
-
-    if ($conn->query($sql) === TRUE) {
-        $_SESSION['action'] = 'edit';
-        redirect();
+    // Validate required fields
+    if(empty($class_name) || empty($class_capacity)) {
+        echo "<p class='alert alert-danger'>Class name and capacity are required.</p>";
     } else {
-        echo "<p class='error'>Error updating class details: " . $conn->error . "</p>";
+        // Update class data securely
+        $sql = "UPDATE classes SET class_name=?, class_capacity=? WHERE class_id=?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("sii", $class_name, $class_capacity, $id);
+
+        // Execute the update
+        if ($stmt->execute()) {
+            $_SESSION['action'] = 'edit';
+            redirect();
+            exit();
+        } else {
+            echo "<p class='alert alert-danger'>Error updating class: " . $conn->error . "</p>";
+        }
+        $stmt->close();
     }
 }
 ?>

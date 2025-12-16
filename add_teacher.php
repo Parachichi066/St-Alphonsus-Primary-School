@@ -26,25 +26,45 @@ if (isset($_POST['add'])) {
     if (empty($teacher_name) || empty($teacher_email) || empty($class_id)) {
         echo "<p class='alert alert-danger'>Teacher Name, Email, and Assigned Year are required fields.</p>";
     } else {
+        // Check if the selected class is already assigned to another teacher
+        if (!empty($class_id)) {
+            $check_sql = "SELECT teacher_name FROM teachers WHERE class_id = ?";
+            $check_stmt = $conn->prepare($check_sql);
+            $check_stmt->bind_param("i", $class_id);
+            $check_stmt->execute();
+            $check_res = $check_stmt->get_result();
+            
+            // If a teacher is found for that class, show an error
+            if ($check_res->num_rows > 0) {
+                $existing = $check_res->fetch_assoc();
+                echo "<p class='alert alert-danger'>Error: That class is already assigned to " . htmlspecialchars($existing['teacher_name']) . ".</p>";
+                $check_stmt->close();
+                // Stop execution here so we don't save
+                goto end_save; 
+            }
+            $check_stmt->close();
+        }
 
-    // Prepare and bind
-    $sql = "INSERT INTO teachers (teacher_name, teacher_email, teacher_telephone, teacher_address, teacher_salary, background_check, class_id) VALUES (?, ?, ?, ?, ?, ?, ?)";
-    
-    $stmt = $conn->prepare($sql);
-    
-    // s=string, d=double (salary), i=integer
-    $stmt->bind_param("ssssdii", $teacher_name, $teacher_email, $teacher_telephone, $teacher_address, $teacher_salary, $background_check, $class_id);
+        // Prepare and bind
+        $sql = "INSERT INTO teachers (teacher_name, teacher_email, teacher_telephone, teacher_address, teacher_salary, background_check, class_id) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        
+        $stmt = $conn->prepare($sql);
+        
+        // s=string, d=double (salary), i=integer
+        $stmt->bind_param("ssssdii", $teacher_name, $teacher_email, $teacher_telephone, $teacher_address, $teacher_salary, $background_check, $class_id);
 
-    // Execute the statement
-    if ($stmt->execute()) {
-        $_SESSION['action'] = 'add';
-        redirect();
-        exit();
-    } else {
-        echo "<p class='alert alert-danger'>Error adding Teacher details: " . $conn->error . "</p>";
+        // Execute the statement
+        if ($stmt->execute()) {
+            $_SESSION['action'] = 'add';
+            redirect();
+            exit();
+        } else {
+            echo "<p class='alert alert-danger'>Error adding Teacher details: " . $conn->error . "</p>";
+        }
+        $stmt->close();
     }
-    $stmt->close();
-    }
+    end_save: {}
+    
 }
 ?>
 <!DOCTYPE html>

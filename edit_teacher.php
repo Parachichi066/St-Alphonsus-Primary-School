@@ -9,22 +9,21 @@ if ($_SESSION['role'] != 'admin') {
 }
 // Assign teacher ID from GET parameter
 $id = $_GET['id'];
-$teacher = null;
-$error_msg = "";
+$result = null;
 
 // Fetch existing teacher details
 $stmt = $conn->prepare("SELECT * FROM teachers WHERE teacher_id = ?");
 $stmt->bind_param("i", $id);
 $stmt->execute();
-$result = $stmt->get_result();
+$teacher = $stmt->get_result();
 
 // Check if teacher exists
-if($result->num_rows == 0) {
+if($teacher->num_rows == 0) {
     die("Teacher not found.");
 }
 
 // Fetch teacher data
-$teacher = $result->fetch_assoc();
+$result = $teacher->fetch_assoc();
 $stmt->close();
 
 // Handle form cancellations
@@ -51,6 +50,23 @@ if (isset($_POST['save'])) {
     if(empty($teacher_name) || empty($teacher_email)) {
         echo "<p class='alert alert-danger'>Name and Email are required.</p>";
     } else {
+        if (!empty($class_id)) {
+        // We check for any teacher with this class_id who is NOT this current teacher ($id)
+        $check_sql = "SELECT teacher_name FROM teachers WHERE class_id = ? AND teacher_id != ?";
+        $check_stmt = $conn->prepare($check_sql);
+        $check_stmt->bind_param("ii", $class_id, $id);
+        $check_stmt->execute();
+        $check_res = $check_stmt->get_result();
+
+        if ($check_res->num_rows > 0) {
+            $existing = $check_res->fetch_assoc();
+            $error_msg = "Error: That class is already assigned to " . htmlspecialchars($existing['teacher_name']);
+            $check_stmt->close();
+            // Skip the update
+            goto end_update;
+        }
+        $check_stmt->close();
+        }
         // Handle "No Class Assigned" (empty class_id)
         $class_id_sql = empty($class_id) ? null : $class_id;
 
@@ -78,6 +94,7 @@ if (isset($_POST['save'])) {
         }
         $stmt->close();
     }
+    end_update: {}
 }
 ?>
 <!DOCTYPE html>
@@ -137,7 +154,8 @@ if (isset($_POST['save'])) {
                 </div>
                 <div class="mb-3">
                     <label for="class_id" class="form-label">Assigned Year</label>
-                    <select class="form-select" id="class_id" name="class_id" required>
+                    <select class="form-select" id="class_id" name="class_id">
+                        <option value="">-- No Class Assigned --</option>
                         <?php
 
                         // Fetch all classes for the dropdown

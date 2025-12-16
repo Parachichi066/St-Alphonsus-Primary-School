@@ -3,7 +3,7 @@
 include "connection.php";
 
 // Function to redirect to parents list
-if (!isset($_SESSION['role']) != 'admin') {
+if ($_SESSION['role'] != 'admin') {
     header("Location: login.php");
 }
 

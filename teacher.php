@@ -116,7 +116,7 @@ if (isset($_SESSION['action'])) {
                     echo "<td>" . htmlspecialchars($row['age']) . "</td>";
                     echo "<td>" . htmlspecialchars($row['medical_information']) . "</td>";
                     // Action buttons for Edit and Remove, passing student_id and class_id, with confirmation on delete
-                    echo "<td><a href='edit_student.php?id=" . urlencode($row['student_id']) . "' class='btn btn-primary'>Edit</a>  <a href='delete_student.php?id=" . urlencode($row['student_id']) . "&class_id=" . urlencode($teacher['class_id']) . "' class='btn btn-danger'onclick="return confirm('Are you sure you want to remove this student?');">Remove</a></td>";
+                    echo "<td><a href='edit_student.php?id=" . urlencode($row['student_id']) . "' class='btn btn-primary'>Edit</a>  <a href='delete_student.php?id=" . urlencode($row['student_id']) . "&class_id=" . urlencode($teacher['class_id']) . "' class='btn btn-danger' onclick=\"return confirm('Are you sure you want to remove this student?');\">Remove</a></td>";
                     echo "</tr>";
                 }
                 echo "</tbody></table>";

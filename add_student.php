@@ -27,28 +27,59 @@ if (isset($_POST['add'])) {
     $student_address = $_POST['student_address'];
 
     // Validate required fields
-    if (empty($student_name) || empty($age) || empty($class_id)) {
+    if (empty($student_name) || empty($age) || empty($class_id) || empty($student_address)) {
         echo "<p class='alert alert-danger'>Name, Age, and Assigned Year are required fields.</p>";
     } else {
-    
-    // Prepare and execute SQL insert statement
-    $sql = "INSERT INTO students (student_name, age, medical_information, class_id, student_address) VALUES (?, ?, ?, ?, ?)";
-        
-    $stmt = $conn->prepare($sql);
-    
-    // s = string, i = integer
-    $stmt->bind_param("sisis", $student_name, $age, $medical_information, $class_id, $student_address);
+        // Check class capacity before adding student
+        if (!empty($class_id)) {
+            // Prepare a query to get the current count AND the max capacity in one go
+            $cap_sql = "SELECT classes.class_capacity, 
+                            (SELECT COUNT(*) FROM students WHERE class_id = ?) as current_count 
+                        FROM classes 
+                        WHERE class_id = ?";
+            
+            // Prepare and execute the statement
+            $stmt_cap = $conn->prepare($cap_sql);
+            $stmt_cap->bind_param("ii", $class_id, $class_id);
+            $stmt_cap->execute();
+            $cap_result = $stmt_cap->get_result()->fetch_assoc();
+            $stmt_cap->close();
 
-    if ($stmt->execute()) {
-        $_SESSION['action'] = 'add'; // Set flash message for the next page
-        redirect();
-        exit();
-    } else {
-        // Error handling
-        echo "<p class='alert alert-danger>Error adding student: " . $conn->error . "</p>";
+            // Check if class is full
+            if ($cap_result) {
+                $limit = $cap_result['class_capacity'];
+                $current = $cap_result['current_count'];
+
+                if ($current >= $limit) {
+                    // STOP: The class is full
+                    echo "<p class='alert alert-danger'>Error: This class is full ($current/$limit). Cannot add more students.</p>";
+                    // We use a 'goto' to skip the INSERT part below
+                    goto end_save;
+                }
+            }
+        }
+        if (empty($medical_information)) {
+            $medical_information = "None"; // Default value if none provided
+        }
+        // Prepare and execute SQL insert statement
+        $sql = "INSERT INTO students (student_name, age, medical_information, class_id, student_address) VALUES (?, ?, ?, ?, ?)";
+            
+        $stmt = $conn->prepare($sql);
+        
+        // s = string, i = integer
+        $stmt->bind_param("sisis", $student_name, $age, $medical_information, $class_id, $student_address);
+
+        if ($stmt->execute()) {
+            $_SESSION['action'] = 'add'; // Set flash message for the next page
+            redirect();
+            exit();
+        } else {
+            // Error handling
+            echo "<p class='alert alert-danger>Error adding student: " . $conn->error . "</p>";
+        }
+        $stmt->close();
     }
-    $stmt->close();
-    }
+    end_save: {}
 }
 
 ?>

@@ -65,28 +65,55 @@ if(isset($_POST['cancel'])) {
 if (isset($_POST['save'])) {
     $student_name = $_POST['student_name'];
     $age = $_POST['age'];
-    $medical_information = $_POST['medical_information'];
     // Only allow certain roles to update specific fields
     if($_SESSION['role'] == 'admin') {
         $class_id = $_POST['class_id'];
     } else {
-        $class_id = $result['class_id'];
+        $class_id = $student['class_id'];
     }
     // Only allow certain roles to update specific fields
     if($_SESSION['role'] == 'parent' || $_SESSION['role'] == 'admin') {
         $student_address = $_POST['student_address'];
+        $medical_information = $_POST['medical_information'];
     } else {
-        $student_address = $result['student_address'];
+        $student_address = $student['student_address'];
+        $medical_information = $student['medical_information'];
     }
 
     // Server-side validation
     if(empty($student_name)) {
         echo "<p class='alert alert-danger'>Student Name is required.</p>";
     } else {
+        if($_SESSION['role'] == 'admin') {
+            $new_class_id = $_POST['class_id'];
+        } else {
+            $new_class_id = $student['class_id']; // Keep existing
+        }
+
+        // CHECK: Only enforce capacity if the class is DIFFERENT from their current one
+        if ($new_class_id != $student['class_id']) {
+            
+            // Run the same check as above
+            $cap_sql = "SELECT classes.class_capacity, 
+                            (SELECT COUNT(*) FROM students WHERE class_id = ?) as current_count 
+                        FROM classes 
+                        WHERE class_id = ?";
+            
+            $stmt_cap = $conn->prepare($cap_sql);
+            $stmt_cap->bind_param("ii", $new_class_id, $new_class_id);
+            $stmt_cap->execute();
+            $cap_result = $stmt_cap->get_result()->fetch_assoc();
+            $stmt_cap->close();
+
+            if ($cap_result && $cap_result['current_count'] >= $cap_result['class_capacity']) {
+                echo "<p class='alert alert-danger'>Error: Target class is full ({$cap_result['current_count']}/{$cap_result['class_capacity']}). Move denied.</p>";
+                goto end_save; // Skip the update
+            }
+        }
         // Update using prepared statements to prevent SQL injection
         $sql = "UPDATE students SET student_name=?, age=?, class_id=?, student_address=?, medical_information=? WHERE student_id=?";
         $stmt = $conn->prepare($sql);
-        $stmt->bind_param("sisssi", $student_name, $age, $class_id, $address, $medical, $id);
+        $stmt->bind_param("sisssi", $student_name, $age, $class_id, $student_address, $medical_information, $id);
 
         // Execute and check for success
         if ($stmt->execute()) {
@@ -98,6 +125,7 @@ if (isset($_POST['save'])) {
         }
         $stmt->close();
     }
+    end_save: {}
 }
 
 ?>
@@ -131,11 +159,11 @@ if (isset($_POST['save'])) {
             <form action="#" method="POST">
                 <div class="mb-3">
                     <label for="student_name" class="form-label">Student Name</label>
-                    <input type="text" class="form-control" id="student_name" name="student_name" value="<?php echo htmlspecialchars($result['student_name']); ?>" required>
-                <?php echo "hello"; ?></div>
+                    <input type="text" class="form-control" id="student_name" name="student_name" value="<?php echo htmlspecialchars($student['student_name']); ?>" required>
+                </div>
                 <div class="mb-3">
                     <label for="age" class="form-label">Age</label>
-                    <input type="number" class="form-control" id="age" name="age" value="<?php echo htmlspecialchars($result['age']); ?>" required>
+                    <input type="number" class="form-control" id="age" name="age" value="<?php echo htmlspecialchars($student['age']); ?>" required>
                 </div>
                 <?php
 
@@ -151,7 +179,7 @@ if (isset($_POST['save'])) {
                         $classes_result = $conn->query($sql_classes_list);
                         if ($classes_result->num_rows > 0) {
                             while ($class_row = $classes_result->fetch_assoc()) {
-                                $selected = ($class_row['class_id'] == $result['class_id']) ? 'selected' : '';
+                                $selected = ($class_row['class_id'] == $student['class_id']) ? 'selected' : '';
                                 echo "<option value='" . htmlspecialchars($class_row['class_id']) . "' $selected>" . htmlspecialchars($class_row['class_name']) . "</option>";
                             }
                         }
@@ -166,15 +194,15 @@ if (isset($_POST['save'])) {
                     ?>
                 <div class="mb-3">
                     <label for="student_address" class="form-label">Student Address</label>
-                    <input type="text" class="form-control" id="student_address" name="student_address" value="<?php echo htmlspecialchars($result['student_address']); ?>" required>
+                    <input type="text" class="form-control" id="student_address" name="student_address" value="<?php echo htmlspecialchars($student['student_address']); ?>" required>
+                </div>
+                <div class="mb-3">
+                    <label for="medical_information" class="form-label">Medical Information</label>
+                    <input type="text" class="form-control" id="medical_information" name="medical_information" value="<?php echo htmlspecialchars($student['medical_information']); ?>" required>
                 </div>
                     <?php
                 }
                 ?>
-                <div class="mb-3">
-                    <label for="medical_information" class="form-label">Medical Information</label>
-                    <input type="text" class="form-control" id="medical_information" name="medical_information" value="<?php echo htmlspecialchars($result['medical_information']); ?>" required>
-                </div>
                 <button type="submit" class="btn btn-primary" name="save">Save</button>
                 <button type="submit" class="btn btn-danger" name="cancel">Cancel</button>
             </form>
@@ -210,11 +238,13 @@ if (isset($_POST['save'])) {
                                             INNER JOIN student_parent ON parents.parent_id = student_parent.parent_id 
                                             WHERE student_parent.student_id = ?";
                             
+                            // Prepare and execute
                             $stmt_p = $conn->prepare($sql_parents);
                             $stmt_p->bind_param("i", $current_id);
                             $stmt_p->execute();
                             $res_p = $stmt_p->get_result();
 
+                            // Display linked parents
                             if ($res_p->num_rows > 0) {
                                 while($p_row = $res_p->fetch_assoc()) {
                                     echo "<tr>";

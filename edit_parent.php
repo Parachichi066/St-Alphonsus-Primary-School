@@ -1,29 +1,59 @@
 <?php
-
+// Include session, connection and redirect functions
 include "connection.php";
 
-$id = $_GET['id'];
-$sql = "SELECT * FROM parents WHERE parent_id='$id'";
-$result = $conn->query($sql)->fetch_assoc();
-
-if(isset($_POST['cancel'])) {
-    redirect();
+// Redirect if not admin
+if ($_SESSION['role'] != 'admin') {
+    header('Location: login.php');
+    exit;
 }
 
+// Get parent ID from URL
+$id = $_GET['id'];
+$result = null;
+
+// Fetch existing parent data securely
+$stmt = $conn->prepare("SELECT * FROM parents WHERE parent_id = ?");
+$stmt->bind_param("i", $id);
+$stmt->execute();
+$res = $stmt->get_result();
+if($res->num_rows == 0) { die("Parent not found."); }
+$result = $res->fetch_assoc();
+$stmt->close();
+
+// Handle Cancel
+if(isset($_POST['cancel'])) {
+    redirect();
+    exit();
+}
+
+// Handle Save
 if (isset($_POST['save'])) {
-    $parent_name = $_POST['parent_name'];
-    $parent_email = $_POST['parent_email'];
+    $parent_name = trim($_POST['parent_name']);
+    $parent_email = trim($_POST['parent_email']);
     $parent_telephone = $_POST['parent_telephone'];
     $parent_address = $_POST['parent_address'];
-    $user_id = $_POST['user_id'];
-
-    $sql = "UPDATE parents SET parent_name='$parent_name', parent_email='$parent_email', parent_telephone='$parent_telephone', parent_address='$parent_address', user_id='$user_id' WHERE parent_id='$id'";
-
-    if ($conn->query($sql) === TRUE) {
-        $_SESSION['action'] = 'edit';
-        redirect();
+    // Handle optional user_id (NULL if empty)
+    $user_id = !empty($_POST['user_id']) ? $_POST['user_id'] : NULL;
+    // Validate required fields
+    if(empty($parent_name) || empty($parent_email)) {
+        echo "<p class='alert alert-danger'>Name and Email are required.</p>";
     } else {
-        echo "<p class='error'>Error updating parent details: " . $conn->error . "</p>";
+        // Update parent data securely
+        $sql = "UPDATE parents SET parent_name=?, parent_email=?, parent_telephone=?, parent_address=?, user_id=? WHERE parent_id=?";
+        $stmt = $conn->prepare($sql);
+        $stmt->bind_param("ssssii", $parent_name, $parent_email, $parent_telephone, $parent_address, $user_id, $id);
+
+        if ($stmt->execute()) {
+            // Redirect with success message
+            $_SESSION['action'] = 'edit';
+            redirect();
+            exit();
+        } else {
+            // Display error message
+            echo "<p class='alert alert-danger'>Error updating parent: " . $conn->error . "</p>";
+        }
+        $stmt->close();
     }
 }
             
@@ -77,16 +107,16 @@ if (isset($_POST['save'])) {
                     <select class="form-select" id="user_id" name="user_id">
                         <option value="">-- No User Account Linked --</option>
                         <?php
-                        // 1. Fetch all users (you might want to filter WHERE role='parent')
+                        // Fetch all users 
                         $user_sql = "SELECT user_id, username, role FROM users WHERE user_id != 1"; // Exclude admin
                         $user_result = $conn->query($user_sql);
 
                         if ($user_result->num_rows > 0) {
                             while ($u_row = $user_result->fetch_assoc()) {
-                                // 2. Check if this user is the one currently saved for this parent
+                                // Check if this user is the one currently saved for this parent
                                 $selected = ($u_row['user_id'] == $result['user_id']) ? 'selected' : '';
                                 
-                                // 3. Display the option (e.g., "john_doe (Parent)")
+                                // Display the options as "john_doe (Parent)"
                                 echo "<option value='" . $u_row['user_id'] . "' $selected>" 
                                      . htmlspecialchars($u_row['username']) . " (" . htmlspecialchars($u_row['role']) . ")" 
                                      . "</option>";
