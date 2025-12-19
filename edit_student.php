@@ -2,6 +2,29 @@
 // Handle session and redirection
 include "connection.php";
 
+// Prevent unauthorised access
+if ($_SESSION['role'] == "teacher") {
+    header("Location: login.php");
+    exit();
+}
+
+// Prevent unauthorised parents
+if ($_SESSION['role'] == 'parent') {
+    $sql_parent = "SELECT * FROM parents
+                    INNER JOIN users ON parents.user_id = users.user_id
+                    INNER JOIN student_parent ON parents.parent_id = student_parent.parent_id
+                    INNER JOIN students ON student_parent.student_id = students.student_id
+                    WHERE students.student_id = ? AND parents.user_id = ?";
+    $stmt_authorise = $conn->prepare($sql_parent);
+    $stmt_authorise->bind_param('ii', $_GET['id'], $_SESSION['id']);
+    $stmt_authorise->execute();
+    // Redirect when wrong parent attempts to edit
+    if ($stmt_authorise->get_result()->num_rows == 0) {
+        redirect();
+    }
+}
+
+
 // Handle linking and unlinking parents
 if (isset($_POST['link_parent'])) {
     $parent_id = $_POST['parent_id'];
@@ -71,14 +94,8 @@ if (isset($_POST['save'])) {
     } else {
         $class_id = $student['class_id'];
     }
-    // Only allow certain roles to update specific fields
-    if($_SESSION['role'] == 'parent' || $_SESSION['role'] == 'admin') {
-        $student_address = $_POST['student_address'];
-        $medical_information = $_POST['medical_information'];
-    } else {
-        $student_address = $student['student_address'];
-        $medical_information = $student['medical_information'];
-    }
+    $student_address = $_POST['student_address'];
+    $medical_information = $_POST['medical_information'];
 
     // Server-side validation
     if(empty($student_name)) {

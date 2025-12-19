@@ -135,7 +135,7 @@ if ($_SESSION['role'] != 'admin') {
                 // Check if Name Search is used
                 if (!empty($_GET['search_name'])) {
                     $sql .= " AND students.student_name LIKE ?";
-                    $params[] = $_GET['search_name'] . "%"; // Add wildcards for partial match
+                    $params[] = $_GET['search_name'] . "%"; // Wildcards for partial match
                     $types .= "s";
                 }
 

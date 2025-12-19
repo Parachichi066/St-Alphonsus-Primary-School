@@ -3,6 +3,11 @@
 include 'connection.php';
 $id = $_GET['id'];
 
+// Prevent unauthorised access
+if ($_SESSION['role'] != 'admin') {
+    header("location: login.php");
+    exit();
+}
 // Check if url passes parent_id to unlink
 if (isset($_GET['parent_id'])) {
     $parent_id_to_remove = $_GET['parent_id'];

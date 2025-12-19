@@ -67,7 +67,7 @@ if (isset($_POST['add'])) {
             </nav>
         </header>
         <main class="container mt-4">
-            <h1>Edit Class</h1>
+            <h1>Add Class</h1>
             <form action="#" method="POST">
                 <div class="mb-3">
                     <label for="class_name" class="form-label">Class Name</label>
