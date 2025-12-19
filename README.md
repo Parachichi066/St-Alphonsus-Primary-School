@@ -53,6 +53,3 @@ The system comes pre-populated with users for testing purposes.
 ## Security Highlights
 * **Password Hashing:** Passwords are never stored in plain text. We use PHP's native `password_hash` algorithm.
 * **Input Validation:** Server-side validation ensures data integrity before touching the database.
-
-## 📄 License
-This project is open-source and available under the [MIT License](LICENSE).
